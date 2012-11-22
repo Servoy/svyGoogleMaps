@@ -16,7 +16,7 @@
  *
  * @properties={typeid:35,uuid:"A0F61436-6581-4BD0-9E0F-A842B5EBCA9D"}
  */
-var callbackName
+var callbackName = 'googleMapsHandlerCallback.js'
 
 /**
  * Variable with self executing function as value to run some initialization code when the scope gets instantiated on solution start.
@@ -31,7 +31,6 @@ var init = function() {
 	var callback = plugins.WebClientUtils.generateCallbackScript(browserCallback,['objectType', 'id', 'eventType', 'data'], false);
 	var script = 'svyDataVis.gmaps.mapsEventHandler = function(objectType, id, eventType, data){' + callback + '}';
 	var bytes = new Packages.java.lang.String(script).getBytes('UTF-8')
-	callbackName = 'googleMapsHandlerCallback_' + application.getUUID() + '.js'
 	solutionModel.newMedia(callbackName, bytes)
 }()
 
