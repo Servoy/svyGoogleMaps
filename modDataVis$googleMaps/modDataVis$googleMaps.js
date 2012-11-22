@@ -133,7 +133,7 @@ function browserCallback(objectType, id, eventType, data) {
 	}
 	
 	//Fire event that the user potentially has attached
-	scopes.svyEventManager.fireEvent(null, id, eventType, [objectType, id, eventType, data]);
+	scopes.svyEventManager.fireEvent(id, eventType, [objectType, id, eventType, data]);
 }
 
 /**
