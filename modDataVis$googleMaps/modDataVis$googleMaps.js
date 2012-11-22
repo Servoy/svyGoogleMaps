@@ -381,12 +381,13 @@ var MapTypeIds = {
 
 /**
  * @constructor
- * @param {{animation: Animation=,
+ * TODO: @param {{animation: Animation=,
  * 			clickable: Boolean=,
  * 			cursor: String=,
  * 			draggable: Boolean=,
  * 			flat: Boolean=,
  *			icon: String|MarkerImage|Symbol=,
+ * TODO: 	map:scopes.modDataVis$googleMaps.Map|StreetViewPanorama,
  * 			map: scopes.modDataVis$googleMaps.Map,
  * 			optimized: Boolean=,
  * 			position: scopes.modDataVis$googleMaps.LatLng,
@@ -886,20 +887,28 @@ function InfoWindow(options) {
  * @param {Boolean} [options.keyboardShortcuts]
  * @param {Boolean} [options.mapMaker]
  * @param {Boolean} [options.mapTypeControl]
+ * TODO @param {MapTypeControlOptions} [options.mapTypeControlOptions]
  * @param {MapTypeId} options.mapTypeId
  * @param {Number} [options.maxZoom]
  * @param {Number} [options.minZoom]
  * @param {Boolean} [options.noClear]
  * @param {Boolean} [options.overviewMapControl]
+ * TODO @param {OverviewMapControlOptions} [options.overviewMapControlOptions]
  * @param {Boolean} [options.panControl]
+ * TODO @param {PanControlOptions} [options.panControlOptions]
  * @param {Boolean} [options.rotateControl]
+ * TODO @param {RotateControlOptions} [options.rotateControlOptions]
  * @param {Boolean} [options.scaleControl]
+ * TODO @param {ScaleControlOptions} [options.scaleControlOptions]
  * @param {Boolean} [options.scrollwheel]
  * TODO @param {StreetViewPanorama} [options.streetView]
  * @param {Boolean} [options.streetViewControl]
+ * TODO @param {StreetViewControlOptions} [options.streetViewControlOptions]
+ * TODO @param {Array<MapTypeStyle>} [options.styles]
  * @param {Number} [options.tilt]
  * @param {Number} options.zoom
  * @param {Boolean} [options.zoomControl]
+ * TODO @param {ZoomControlOptions} [options.zoomControlOptions] 
  * @properties={typeid:24,uuid:"1E5BE0D4-5E7A-489D-AACA-7BECA54B2CD1"}
  */
 function Map(container, options) {
