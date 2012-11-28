@@ -40,6 +40,7 @@ var init = function() {
  * @properties={typeid:24,uuid:"2B8B17B3-42F6-46AA-86B1-9A8D49ABA53E"}
  */
 function browserCallback(objectType, id, eventType, data) {
+	
 	var options;
 	if (allObjects[id]) {
 		options = allObjects[id][0];
@@ -84,14 +85,48 @@ function browserCallback(objectType, id, eventType, data) {
 //					break;
 			case 'idle':
 				o = JSON.parse(data)
+				
+				//bounds_changed
 				var sw = new scopes.modDataVis$googleMaps.LatLng(o.bounds.sw.lat, o.bounds.sw.lng)
 				var ne = new scopes.modDataVis$googleMaps.LatLng(o.bounds.ne.lat, o.bounds.ne.lng)
-				options.bounds = new scopes.modDataVis$googleMaps.LatLngBounds(sw,ne)
-				options.center = new scopes.modDataVis$googleMaps.LatLng(o.center.lat,o.center.lng)
-				if (o.heading) options.heading = parseInt(o.heading)
-				options.mapTypeId = o.mapTypeId
-				options.tilt = o.tilt 
-				options.zoom = o.zoom
+				var newBounds = new scopes.modDataVis$googleMaps.LatLngBounds(sw,ne);
+				if (!options.bounds || !options.bounds.equals(newBounds)) {
+					options.bounds = newBounds;
+					scopes.svyEventManager.fireEvent(id, "bounds_changed", [objectType, id, eventType, data]);
+				}
+
+				//center_changed
+				var newCenter = new scopes.modDataVis$googleMaps.LatLng(o.center.lat,o.center.lng);
+				if (options.center && options.center.equals(newCenter)) {
+					options.center = newCenter;
+					scopes.svyEventManager.fireEvent(id, "center_changed", [objectType, id, eventType, data]);
+				}
+				
+				//heading_changed
+				var newHeading = parseInt(o.heading);
+				if (o.heading && options.heading != o.heading) {
+					options.heading = newHeading;
+					scopes.svyEventManager.fireEvent(id, "heading_changed", [objectType, id, eventType, data]);
+				}
+				
+				//maptypeid_changed
+				if (o.mapTypeId != options.mapTypeId) {
+					options.mapTypeId = o.mapTypeId
+					scopes.svyEventManager.fireEvent(id, "maptypeid_changed", [objectType, id, eventType, data]);
+				}
+				
+				//tilt_changed
+				if (o.tilt != options.tilt) {
+					options.tilt = o.tilt
+					scopes.svyEventManager.fireEvent(id, "tilt_changed", [objectType, id, eventType, data]);
+				}
+				
+				//zoom_changed
+				if (o.zoom != options.zoom) {
+					options.zoom = o.zoom;
+					scopes.svyEventManager.fireEvent(id, "zoom_changed", [objectType, id, eventType, data]);
+				}
+				
 				break;
 			default:
 				application.output('Unknown Map eventType: ' + eventType)
@@ -110,7 +145,7 @@ function browserCallback(objectType, id, eventType, data) {
 					break;
 				default:
 					application.output('Unknown Marker eventType: ' + eventType)
-					return;
+					break;
 			}
 			break;
 		case 'infoWindow':
@@ -119,12 +154,12 @@ function browserCallback(objectType, id, eventType, data) {
 					break;
 				default:
 					application.output('Unknown InfoWindow eventType: ' + eventType)
-					return;
+					break;
 			}
 			
 		default:
 			application.output('Unknown GoogleMaps objectType: ' + objectType)
-			return;
+			break;
 	}
 	
 	if (allObjects[id]) {
@@ -166,7 +201,7 @@ function LatLng(lat, lng) {
 	}
 	
 	/**
-	 * @param {LatLng} other
+	 * @param {scopes.modDataVis$googleMaps.LatLng} other
 	 * @return {Boolean}
 	 */
 	this.equals = function (other){
@@ -240,7 +275,7 @@ function LatLngBounds(sw, ne){
 		return containsLat && containsLng;
 	}
 	/**
-	 * @param {LatLngBounds} other
+	 * @param {scopes.modDataVis$googleMaps.LatLngBounds} other
 	 * @return {Boolean}
 	 */
 	this.equals = function(other){
@@ -422,7 +457,7 @@ function Marker(options) {
 //	var _zIndex
 
 	//escape 
-	options.title = options.title.replace(/['"]/g,"\\$1");
+	options.title = options.title.replace(/[^\w\s]/g,"");
 	
 	var markerSetup = {
 		id: id,
@@ -1138,7 +1173,7 @@ function Map(container, options) {
 //	}
 
 	/**
-	 * @param {StreetViewPanorama} panorama
+	 * TODO: @param {StreetViewPanorama} panorama
 	 */
 	this.setStreetView = function(panorama) {}
 	
@@ -1188,8 +1223,8 @@ function Map(container, options) {
 	 * @param {Function} eventHandler
 	 * @param {String} eventType
 	 */
-	function addEventListener(eventHandler, eventType) {
-		scopes.svyEventManager.addListener(this, eventType, eventHandler)
+	this.addEventListener = function(eventHandler, eventType) {
+		scopes.svyEventManager.addListener(mapSetup.id, eventType, eventHandler);
 	}
 	
 	allObjects[mapSetup.id] = [options, updateState]

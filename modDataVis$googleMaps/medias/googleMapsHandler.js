@@ -86,15 +86,15 @@ svyDataVis.gmaps = {
 				//Add event listeners
 				var events = [
 					'idle',
-//							'bounds_changed', 
-//							'center_changed', 
-					'click', 
-					'dblclick', 
-					'heading_changed', 
-					'maptypeid_changed', 
-					'projection_changed',
-					'tilt_changed'
-//							'zoom_changed',
+//					'bounds_changed', 
+//					'center_changed', 
+//					'click', 
+//					'dblclick', 
+//					'heading_changed', 
+//					'maptypeid_changed', 
+//					'projection_changed',
+//					'tilt_changed'
+//					'zoom_changed',
 				];
 				
 				for (var j = 0; j < events.length; j++) {
