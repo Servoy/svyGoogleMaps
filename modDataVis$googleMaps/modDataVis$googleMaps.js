@@ -473,8 +473,8 @@ function Marker(options) {
 	function updateState(incrementalUpdateCode) {
 		if (markerSetup.options.map) {
 			/** @type {scopes.modDataVis$googleMaps.Map} */
-			var gmap = markerSetup.options.map;
-			var _mapFormName = gmap.getId();
+			var map = markerSetup.options.map;
+			var _mapFormName = map.getId();
 			if (_mapFormName in forms) {
 				forms[_mapFormName].storeState(scopes.modDataVisualization.serializeObject(markerSetup, specialTypes))
 				
