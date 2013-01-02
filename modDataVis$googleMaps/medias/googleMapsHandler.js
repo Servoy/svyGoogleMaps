@@ -59,7 +59,7 @@ svyDataVis.gmaps = {
 	},
 	
 	initialize: function() {
-		console.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google)
+		console.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google + ' - ' + (arguments.length > 0 ? arguments[0] : ''))
 		
 		$.each(arguments, function(key, value){
 			svyDataVis.gmaps.todos[value] = true
@@ -114,6 +114,7 @@ svyDataVis.gmaps = {
 				//Create infoWindow in the browser
 				svyDataVis.gmaps.createInfoWindow(node)
 			}
+			delete svyDataVis.gmaps.todos[value]
 		})
 	},
 	
