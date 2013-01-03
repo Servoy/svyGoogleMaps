@@ -92,39 +92,39 @@ function browserCallback(objectType, id, eventType, data) {
 				var newBounds = new scopes.modDataVis$googleMaps.LatLngBounds(sw,ne);
 				if (!options.bounds || !options.bounds.equals(newBounds)) {
 					options.bounds = newBounds;
-					scopes.svyEventManager.fireEvent(id, "bounds_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "bounds_changed", [objectType, id, eventType, data]);
 				}
 
 				//center_changed
 				var newCenter = new scopes.modDataVis$googleMaps.LatLng(o.center.lat,o.center.lng);
 				if (options.center && options.center.equals(newCenter)) {
 					options.center = newCenter;
-					scopes.svyEventManager.fireEvent(id, "center_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "center_changed", [objectType, id, eventType, data]);
 				}
 				
 				//heading_changed
 				var newHeading = parseInt(o.heading);
 				if (o.heading && options.heading != o.heading) {
 					options.heading = newHeading;
-					scopes.svyEventManager.fireEvent(id, "heading_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "heading_changed", [objectType, id, eventType, data]);
 				}
 				
 				//maptypeid_changed
 				if (o.mapTypeId != options.mapTypeId) {
 					options.mapTypeId = o.mapTypeId
-					scopes.svyEventManager.fireEvent(id, "maptypeid_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "maptypeid_changed", [objectType, id, eventType, data]);
 				}
 				
 				//tilt_changed
 				if (o.tilt != options.tilt) {
 					options.tilt = o.tilt
-					scopes.svyEventManager.fireEvent(id, "tilt_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "tilt_changed", [objectType, id, eventType, data]);
 				}
 				
 				//zoom_changed
 				if (o.zoom != options.zoom) {
 					options.zoom = o.zoom;
-					scopes.svyEventManager.fireEvent(id, "zoom_changed", [objectType, id, eventType, data]);
+					scopes.modUtils$eventManager.fireEvent(id, "zoom_changed", [objectType, id, eventType, data]);
 				}
 				
 				break;
@@ -167,7 +167,7 @@ function browserCallback(objectType, id, eventType, data) {
 	}
 	
 	//Fire event that the user potentially has attached
-	scopes.svyEventManager.fireEvent(id, eventType, [objectType, id, eventType, data]);
+	scopes.modUtils$eventManager.fireEvent(id, eventType, [objectType, id, eventType, data]);
 }
 
 /**
@@ -721,7 +721,7 @@ function Marker(options) {
 	}
 	
 	this.addEventListener = function(eventHandler, eventType) {
-		scopes.svyEventManager.addListener(markerSetup.id, eventType, eventHandler);
+		scopes.modUtils$eventManager.addListener(markerSetup.id, eventType, eventHandler);
 	}
 	
 	this.getEventHandler = function(eventType) {
@@ -781,7 +781,7 @@ function InfoWindow(options) {
 	}
 	
 	this.addEventListener = function(eventHandler, eventType) {
-		scopes.svyEventManager.addListener(infoWindowSetup.id, eventType, eventHandler);
+		scopes.modUtils$eventManager.addListener(infoWindowSetup.id, eventType, eventHandler);
 	}
 	
 	/**
@@ -1224,7 +1224,7 @@ function Map(container, options) {
 	 * @param {String} eventType
 	 */
 	this.addEventListener = function(eventHandler, eventType) {
-		scopes.svyEventManager.addListener(mapSetup.id, eventType, eventHandler);
+		scopes.modUtils$eventManager.addListener(mapSetup.id, eventType, eventHandler);
 	}
 	
 	allObjects[mapSetup.id] = [options, updateState]
