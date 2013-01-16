@@ -63,7 +63,7 @@ function browserCallback(objectType, id, eventType, data) {
 //					break;
 //				case 'center_changed':
 //					var o = JSON.parse(data)
-//					options.center = new scopes.modDataVis$googleMaps.LatLng(o.lat,o.lng)
+//					options.center = new LatLng(o.lat,o.lng)
 //					break;
 //				case 'click':
 //					break; 
@@ -87,16 +87,16 @@ function browserCallback(objectType, id, eventType, data) {
 				o = JSON.parse(data)
 				
 				//bounds_changed
-				var sw = new scopes.modDataVis$googleMaps.LatLng(o.bounds.sw.lat, o.bounds.sw.lng)
-				var ne = new scopes.modDataVis$googleMaps.LatLng(o.bounds.ne.lat, o.bounds.ne.lng)
-				var newBounds = new scopes.modDataVis$googleMaps.LatLngBounds(sw,ne);
+				var sw = new LatLng(o.bounds.sw.lat, o.bounds.sw.lng)
+				var ne = new LatLng(o.bounds.ne.lat, o.bounds.ne.lng)
+				var newBounds = new LatLngBounds(sw,ne);
 				if (!options.bounds || !options.bounds.equals(newBounds)) {
 					options.bounds = newBounds;
 					scopes.modUtils$eventManager.fireEvent(id, "bounds_changed", [objectType, id, eventType, data]);
 				}
 
 				//center_changed
-				var newCenter = new scopes.modDataVis$googleMaps.LatLng(o.center.lat,o.center.lng);
+				var newCenter = new LatLng(o.center.lat,o.center.lng);
 				if (options.center && options.center.equals(newCenter)) {
 					options.center = newCenter;
 					scopes.modUtils$eventManager.fireEvent(id, "center_changed", [objectType, id, eventType, data]);
@@ -137,7 +137,7 @@ function browserCallback(objectType, id, eventType, data) {
 			switch (eventType) {
 				case 'dragend': //make sure the position is saved in the object on the servoy side
 					o = JSON.parse(data);
-					options.position = new scopes.modDataVis$googleMaps.LatLng(o.position.lat, o.position.lng);
+					options.position = new LatLng(o.position.lat, o.position.lng);
 					break;
 				case 'click':
 				case 'dblclick':
@@ -201,7 +201,7 @@ function LatLng(lat, lng) {
 	}
 	
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLng} other
+	 * @param {LatLng} other
 	 * @return {Boolean}
 	 */
 	this.equals = function (other){
@@ -240,8 +240,8 @@ function LatLng(lat, lng) {
 /**
  * Implements https://developers.google.com/maps/documentation/javascript/reference#LatLngBounds
  * @constructor 
- * @param {scopes.modDataVis$googleMaps.LatLng} sw
- * @param {scopes.modDataVis$googleMaps.LatLng} ne
+ * @param {LatLng} sw
+ * @param {LatLng} ne
  *
  * @properties={typeid:24,uuid:"D48855F6-0418-4E46-A5E4-1A716C3D17B3"}
  */
@@ -252,8 +252,8 @@ function LatLngBounds(sw, ne){
 	var minLng = Math.min(sw.lng(), ne.lng());
 	var maxLng = Math.max(sw.lng(), ne.lng());
 	
-	sw = new scopes.modDataVis$googleMaps.LatLng(minLat, minLng);
-	ne = new scopes.modDataVis$googleMaps.LatLng(maxLat, maxLng);
+	sw = new LatLng(minLat, minLng);
+	ne = new LatLng(maxLat, maxLng);
 	
 	this.toObjectPresentation = function(){
 		return {
@@ -275,7 +275,7 @@ function LatLngBounds(sw, ne){
 		return containsLat && containsLng;
 	}
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLngBounds} other
+	 * @param {LatLngBounds} other
 	 * @return {Boolean}
 	 */
 	this.equals = function(other){
@@ -283,45 +283,45 @@ function LatLngBounds(sw, ne){
 	}
 	
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLng} point
+	 * @param {LatLng} point
 	 * @return {LatLngBounds}
 	 */
 	this.extend = function(point){
 		if (point.lat() > ne.lat()) {
 			//point is north of the bounds
-			ne = new scopes.modDataVis$googleMaps.LatLng(point.lat(), ne.lng());
+			ne = new LatLng(point.lat(), ne.lng());
 		}
 		if (point.lng() > ne.lng()) {
 			//point is east of the bounds
-			ne = new scopes.modDataVis$googleMaps.LatLng(ne.lat(), point.lng());
+			ne = new LatLng(ne.lat(), point.lng());
 		}
 		if (point.lat() < sw.lat()) {
 			//point is south of the bounds
-			sw = new scopes.modDataVis$googleMaps.LatLng(point.lat(), sw.lng());
+			sw = new LatLng(point.lat(), sw.lng());
 		}
 		if (point.lng() < sw.lng()) {
 			//point is west of the bounds
-			sw = new scopes.modDataVis$googleMaps.LatLng(sw.lat(), point.lng());
+			sw = new LatLng(sw.lat(), point.lng());
 		}
 		return this;
 	}
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLng}
+	 * @return {LatLng}
 	 */
 	this.getCenter = function(){
 		var centerLat = (ne.lat() + sw.lat()) / 2;
 		var centerLng = (ne.lng() + sw.lng()) / 2;
 		
-		return new scopes.modDataVis$googleMaps.LatLng(centerLat, centerLng);
+		return new LatLng(centerLat, centerLng);
 	}
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLng}
+	 * @return {LatLng}
 	 */
 	this.getNorthEast = function(){
 		return ne
 	}
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLng}
+	 * @return {LatLng}
 	 */
 	this.getSouthWest = function(){
 		return sw
@@ -348,10 +348,10 @@ function LatLngBounds(sw, ne){
 		return latEmpty || lngEmpty;
 	}
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLng}
+	 * @return {LatLng}
 	 */
 	this.toSpan = function(){
-		return new scopes.modDataVis$googleMaps.LatLng(sw.lat(),ne.lat());
+		return new LatLng(sw.lat(),ne.lat());
 	}
 	/**
 	 * @return {String}
@@ -421,10 +421,10 @@ var MapTypeIds = {
  * 			draggable: Boolean=,
  * 			flat: Boolean=,
  *			icon: String|MarkerImage|Symbol=,
- * TODO: 	map:scopes.modDataVis$googleMaps.Map|StreetViewPanorama,
- * 			map: scopes.modDataVis$googleMaps.Map,
+ * TODO: 	map:Map|StreetViewPanorama,
+ * 			map: Map,
  * 			optimized: Boolean=,
- * 			position: scopes.modDataVis$googleMaps.LatLng,
+ * 			position: LatLng,
  * 			raiseOnDrag: Boolean=,
  * 			shadow: String|MarkerImage|Symbol=,
  * 			shape: MarkerShape=,
@@ -445,7 +445,7 @@ function Marker(options) {
 //	var _draggable
 //	var _flat
 //	var _icon
-//	/**@type {scopes.modDataVis$googleMaps.GoogleMap}*/
+//	/**@type {GoogleMap}*/
 //	var _map
 //	var _optimized
 //	var _position
@@ -472,7 +472,7 @@ function Marker(options) {
 	 */
 	function updateState(incrementalUpdateCode) {
 		if (markerSetup.options.map) {
-			/** @type {scopes.modDataVis$googleMaps.Map} */
+			/** @type {Map} */
 			var map = markerSetup.options.map;
 			var _mapFormName = map.getId();
 			if (_mapFormName in forms) {
@@ -531,7 +531,7 @@ function Marker(options) {
 	}
 	
 	if (options.map) {
-		/** @type {scopes.modDataVis$googleMaps.Map} */
+		/** @type {Map} */
 		var gmap = options.map
 		gmap.addMarker(markerSetup.id, this)
 	}
@@ -572,7 +572,7 @@ function Marker(options) {
 	}
 	
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLng}
+	 * @return {LatLng}
 	 */
 	this.getPosition = function() {
 		return options.position
@@ -613,7 +613,7 @@ function Marker(options) {
 //		_icon = icon
 //	}
 	/**
-	 * @param {scopes.modDataVis$googleMaps.Map} map
+	 * @param {Map} map
 	 */
 	this.setMap = function(map) {
 		if (options.map == map) {
@@ -811,7 +811,7 @@ function InfoWindow(options) {
 	 */
 	function updateState(incrementalUpdateCode) {
 		if (infoWindowSetup.options.map) {
-			/** @type {scopes.modDataVis$googleMaps.Map} */
+			/** @type {Map} */
 			var gmap = infoWindowSetup.options.map;
 			var _mapFormName = gmap.getId();
 			if (_mapFormName in forms) {
@@ -852,8 +852,8 @@ function InfoWindow(options) {
 	}
 	
 	/**
-	 * @param {scopes.modDataVis$googleMaps.Map} map
-	 * @param {scopes.modDataVis$googleMaps.Marker} [anchor]
+	 * @param {Map} map
+	 * @param {Marker} [anchor]
 	 */
 	this.open = function(map, anchor) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
 		if (map) { 
@@ -865,7 +865,7 @@ function InfoWindow(options) {
 				options.map = anchor.getMap();
 			}
 		}
-		/** @type {scopes.modDataVis$googleMaps.Map} */
+		/** @type {Map} */
 		var gmap = options.map
 		gmap.addInfoWindow(id, this)
 	}
@@ -1030,22 +1030,22 @@ function Map(container, options) {
 	/* Scripting API
 	 */
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLngBounds} bounds
+	 * @param {LatLngBounds} bounds
 	 */
 	this.fitBounds = function(bounds) {
 		updateState('var bounds = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(bounds.toObjectPresentation(), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].fitBounds(bounds);')
 	}
 
 //	/**
-//	 * @return {scopes.modDataVis$googleMaps.LatLngBounds}
+//	 * @return {LatLngBounds}
 //	 */
 //	this.getBounds = function() {}
 
 	/**
-	 * @return {scopes.modDataVis$googleMaps.LatLngBounds}
+	 * @return {LatLngBounds}
 	 */
 	this.getMarkerBounds = function() {
-		/** @type {scopes.modDataVis$googleMaps.LatLngBounds} */
+		/** @type {LatLngBounds} */
 		var bounds;
 		var index = 1;
 		
@@ -1054,7 +1054,7 @@ function Map(container, options) {
 		if (form.markers) {
 			for (var i in form.markers) {
 				if (index == 1) {
-					bounds = new scopes.modDataVis$googleMaps.LatLngBounds(form.markers[i].getPosition(), form.markers[i].getPosition());
+					bounds = new LatLngBounds(form.markers[i].getPosition(), form.markers[i].getPosition());
 				} else {
 					bounds.extend(form.markers[i].getPosition());
 				}
@@ -1128,7 +1128,7 @@ function Map(container, options) {
 	}
 
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLng} latLng
+	 * @param {LatLng} latLng
 	 */
 	this.panTo = function(latLng) {
 		options.center = latLng;
@@ -1136,14 +1136,14 @@ function Map(container, options) {
 	}
 
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLngBounds} bounds
+	 * @param {LatLngBounds} bounds
 	 */
 	this.panToBounds = function(bounds){
 		plugins.WebClientUtils.executeClientSideJS('var bounds = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(bounds.toObjectPresentation(), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**
-	 * @param {scopes.modDataVis$googleMaps.LatLng} latLng
+	 * @param {LatLng} latLng
 	 */
 	this.setCenter = function(latLng) {
 		options.center = latLng
