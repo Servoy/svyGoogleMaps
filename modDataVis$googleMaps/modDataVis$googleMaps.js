@@ -285,6 +285,7 @@ function LatLngBounds(sw, ne){
 	/**
 	 * @param {LatLng} point
 	 * @return {LatLngBounds}
+	 * @this {LatLngBounds}
 	 */
 	this.extend = function(point){
 		if (point.lat() > ne.lat()) {
@@ -370,6 +371,7 @@ function LatLngBounds(sw, ne){
 	/**
 	 * @param {LatLngBounds} other
 	 * @return {LatLngBounds}
+	 * @this {LatLngBounds}
 	 */
 	this.union = function(other){
 		this.extend(other.getNorthEast());
@@ -614,6 +616,7 @@ function Marker(options) {
 //	}
 	/**
 	 * @param {Map} map
+	 * @this {Marker}
 	 */
 	this.setMap = function(map) {
 		if (options.map == map) {
@@ -854,6 +857,7 @@ function InfoWindow(options) {
 	/**
 	 * @param {Map} map
 	 * @param {Marker} [anchor]
+	 * @this {InfoWindow}
 	 */
 	this.open = function(map, anchor) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
 		if (map) { 
