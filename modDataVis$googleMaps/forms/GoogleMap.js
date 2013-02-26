@@ -51,3 +51,20 @@ var infoWindows = {};
 function getBrowserId() {
 	return 'gmaps'
 }
+
+/**
+ *
+ * @param o
+ * @param {Array} specialTypes
+ *
+ * @properties={typeid:24,uuid:"3B85D8EA-C07D-44BB-B59B-7D12275AA988"}
+ */
+function serializeObject(o, specialTypes) {
+	specialTypes = [
+		scopes.modDataVis$googleMaps.LatLng, 
+		scopes.modDataVis$googleMaps.MapTypeId, 
+		scopes.modDataVis$googleMaps.Marker, 
+		scopes.modDataVis$googleMaps.InfoWindow, 
+		scopes.modDataVis$googleMaps.Map]
+	return _super.serializeObject(o, specialTypes)
+}
