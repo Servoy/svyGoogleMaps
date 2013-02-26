@@ -1,4 +1,4 @@
-console.log('CHECK: Injecting MAPS api')
+svyDataVis.log('CHECK: Injecting MAPS api')
 
 $("document").ready(function() {
 	var script = document.createElement("script");
@@ -59,7 +59,7 @@ svyDataVis.gmaps = {
 	},
 	
 	initialize: function() {
-		console.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google + ' - ' + (arguments.length > 0 ? arguments[0] : ''))
+		svyDataVis.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google + ' - ' + (arguments.length > 0 ? arguments[0] : ''))
 		
 		$.each(arguments, function(key, value){
 			svyDataVis.gmaps.todos[value] = true
@@ -74,8 +74,8 @@ svyDataVis.gmaps = {
 		
 		$.each(this.todos, function(value) {
 		
-			console.log(svyDataVis.gmaps[value])
-			var node = JSON.parse(svyDataVis.gmaps[value], svyDataVis.reviver)
+			svyDataVis.log(svyDataVis.gmaps[value])
+			var node = svyDataVis.JSON2Object(svyDataVis.gmaps[value])
 
 			if (node && node.type == "map") {
 				//Create new Map in the browser
@@ -108,20 +108,21 @@ svyDataVis.gmaps = {
 				
 			} else if (node && node.type == "marker"){
 				//Create marker in the browser
-//						console.log(id);
+//						svyDataVis.log(id);
 				svyDataVis.gmaps.createMarker(node);
 			} else if (node && node.type == "infoWindow") {
 				//Create infoWindow in the browser
 				svyDataVis.gmaps.createInfoWindow(node)
 			}
 			delete svyDataVis.gmaps.todos[value]
+			delete svyDataVis.gmaps[value]
 		})
 	},
 	
 	callbackIntermediate: function(objectType, id, eventType, event) {
 		//Intermediate function to retrieve relevant data when events occur on a map/marker/infoWindow and then send them to the server
 		var data;
-		//console.log("CALLBACKINTERMEDIATE: " + objectType + ", " +  id + ", " +  eventType + ", " +  event);
+		//svyDataVis.log("CALLBACKINTERMEDIATE: " + objectType + ", " +  id + ", " +  eventType + ", " +  event);
 		var object = svyDataVis.gmaps.objects[id];
 		switch (objectType) {
 			case 'map': 
@@ -132,10 +133,10 @@ svyDataVis.gmaps = {
 //						data = JSON.stringify({lat: map.getCenter().lat(), lng: map.getCenter().lng()})
 //						break;
 //					case 'click':
-//						console.log('click');
+//						svyDataVis.log('click');
 //						break;
 //					case 'position_changed':
-//						console.log('click');
+//						svyDataVis.log('click');
 //						break;
 //					case 'dblclick':
 //						break;
@@ -199,6 +200,6 @@ svyDataVis.gmaps = {
 }
 	
 function svyDataVisGMapCallback() {
-	console.log('CHECK: gmap API loaded, callback invoked')
+	svyDataVis.log('CHECK: gmap API loaded, callback invoked')
 	svyDataVis.gmaps.initialize()
 }
