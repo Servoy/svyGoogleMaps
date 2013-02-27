@@ -37,7 +37,7 @@ var markers = {};
 /**
  * Convenient InfoWindow Store of all InfoWindows on the map
  * When calling .setMap() on a InfoWindow, the InfoWindow will be added to this InfoWindow store on the relevant GoogleMap instance
- * 
+ * @deprecated
  * @type {Array<scopes.modDataVis$googleMaps.InfoWindow>}
  * 
  * @properties={typeid:35,uuid:"338AA542-9930-4C7E-AB35-8FBE03365573",variableType:-4}
@@ -53,18 +53,17 @@ function getBrowserId() {
 }
 
 /**
- *
+ * Internal API: DO NOT CALL
  * @param o
- * @param {Array} specialTypes
- *
+ * 
  * @properties={typeid:24,uuid:"3B85D8EA-C07D-44BB-B59B-7D12275AA988"}
  */
-function serializeObject(o, specialTypes) {
-	specialTypes = [
+function serializeObject(o) {
+	return _super.serializeObject(o, [
 		scopes.modDataVis$googleMaps.LatLng, 
 		scopes.modDataVis$googleMaps.MapTypeId, 
 		scopes.modDataVis$googleMaps.Marker, 
 		scopes.modDataVis$googleMaps.InfoWindow, 
-		scopes.modDataVis$googleMaps.Map]
-	return _super.serializeObject(o, specialTypes)
+		scopes.modDataVis$googleMaps.Map
+		])
 }

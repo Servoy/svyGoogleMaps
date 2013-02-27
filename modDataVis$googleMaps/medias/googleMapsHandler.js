@@ -30,9 +30,13 @@ svyDataVis.gmaps = {
 		return marker;
 	},
 	
+	removeMarker: function(id) {
+		svyDataVis.gmaps.objects[id].setMap(null);
+		delete svyDataVis.gmaps.objects[id]
+	},
+	
 	createInfoWindow: function(node) {
-		//The content was escaped because of possible html -> unescape
-		node.content = unescape(node.content);
+		node.content = node.content;
 		
 		//Create infoWindow in the browser
 		var infoWindow = new google.maps.InfoWindow(node)
@@ -45,28 +49,21 @@ svyDataVis.gmaps = {
 			var handler = function(id, eventType){
 				return function(event) {
 					svyDataVis.gmaps.callbackIntermediate("infoWindow", id, eventType, event)
+					delete svyDataVis.gmaps.objects[id] //Removing the InfoWindow now after each close
 				}
 			}(node.id, events[j])
 			google.maps.event.addListener(infoWindow, events[j], handler);
 		}
-		//infoWindow.open(node.map, node.anchor);
 		return infoWindow;
-	},
-	
-	removeMarker: function(id) {
-		svyDataVis.gmaps.objects[id].setMap(null);
-		svyDataVis.gmaps.objects[id] = null;
 	},
 	
 	initialize: function() {
 		svyDataVis.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google + ' - ' + (arguments.length > 0 ? arguments[0] : ''))
 		
 		$.each(arguments, function(key, value){
+			svyDataVis.log('Adding TODO: ' + value)
 			svyDataVis.gmaps.todos[value] = true
 		})
-		//for (var i = 0; i <= arguments.length; i++) {
-		//	this.todos[arguments[i] ] = true
-		//}
 	
 		if (!window.google || google == undefined || !google.maps) {
 			return
@@ -74,7 +71,7 @@ svyDataVis.gmaps = {
 		
 		$.each(this.todos, function(value) {
 		
-			svyDataVis.log(svyDataVis.gmaps[value])
+			svyDataVis.log('Processing TODO: ' + svyDataVis.gmaps[value])
 			var node = svyDataVis.JSON2Object(svyDataVis.gmaps[value])
 
 			if (node && node.type == "map") {
@@ -85,11 +82,11 @@ svyDataVis.gmaps = {
 				
 				//Add event listeners
 				var events = [
-					'idle',
+					'idle', //Using idle event for most events, to prevent event firing galore
 //					'bounds_changed', 
 //					'center_changed', 
-//					'click', 
-//					'dblclick', 
+					'click', 
+					'dblclick', 
 //					'heading_changed', 
 //					'maptypeid_changed', 
 //					'projection_changed',
@@ -121,7 +118,7 @@ svyDataVis.gmaps = {
 	
 	callbackIntermediate: function(objectType, id, eventType, event) {
 		//Intermediate function to retrieve relevant data when events occur on a map/marker/infoWindow and then send them to the server
-		var data;
+		var data = null;
 		//svyDataVis.log("CALLBACKINTERMEDIATE: " + objectType + ", " +  id + ", " +  eventType + ", " +  event);
 		var object = svyDataVis.gmaps.objects[id];
 		switch (objectType) {

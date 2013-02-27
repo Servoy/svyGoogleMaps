@@ -7,7 +7,6 @@
  * TODO: Event firing
  * TODO: implement InfoWindow
  * TODO: implement PolyLine
- * TODO: remove console.log statements, as not supported in every browser
  * TODO: add JSON polyfill for older browsers
  */
 
@@ -27,7 +26,6 @@ var callbackName = 'googleMapsHandlerCallback.js'
  * @properties={typeid:35,uuid:"C88DB00A-27F8-4CAB-A8FB-C1D2D50FC5C4",variableType:-4}
  */
 var init = function() {
-	
 	var callback = plugins.WebClientUtils.generateCallbackScript(browserCallback,['objectType', 'id', 'eventType', 'data'], false);
 	var script = 'svyDataVis.gmaps.mapsEventHandler = function(objectType, id, eventType, data){' + callback + '}';
 	var bytes = new Packages.java.lang.String(script).getBytes('UTF-8')
@@ -40,152 +38,21 @@ var init = function() {
  * @properties={typeid:24,uuid:"2B8B17B3-42F6-46AA-86B1-9A8D49ABA53E"}
  */
 function browserCallback(objectType, id, eventType, data) {
-	
-	var options;
-	if (allObjects[id]) {
-		options = allObjects[id][0];
+	if (allObjectCallbackHandlers[id]) {
+		allObjectCallbackHandlers[id](eventType, JSON.parse(data))
+	} else {
+		application.output('Callback for unknown object: type=' + objectType + ', id=' + id + ', eventType=' + eventType)
 	}
-	/** @type {{
-	 * 		bounds: {sw: {lat:Number, lng:Number}, ne:  {lat:Number, lng:Number}}, 
-	 * 		center: {lat:Number, lng:Number},
-	 * 		tilt: Object,
-	 * 		zoom: Object,
-	 * 		heading: String,
-	 * 		mapTypeId: Object,
-	 * 		position: {lat:Number, lng:Number}
-	 * }}
-	 */
-	var o;
-	switch (objectType) {
-		case 'map':
-			switch (eventType) {
-//				case 'bounds_changed':
-//					break;
-//				case 'center_changed':
-//					var o = JSON.parse(data)
-//					options.center = new LatLng(o.lat,o.lng)
-//					break;
-//				case 'click':
-//					break; 
-//				case 'dblclick':
-//					break; 
-//				case 'heading_changed':
-//					options.heading = parseInt(data)
-//					break;
-//				case 'maptypeid_changed':
-//					options.mapTypeId = data
-//					break;
-//				case 'projection_changed':
-//					break;
-//				case 'tilt_changed':
-//					options.tilt = parseInt(data)
-//					break;
-//				case 'zoom_changed':
-//					options.zoom = parseInt(data)
-//					break;
-			case 'idle':
-				o = JSON.parse(data)
-				
-				//bounds_changed
-				var sw = new LatLng(o.bounds.sw.lat, o.bounds.sw.lng)
-				var ne = new LatLng(o.bounds.ne.lat, o.bounds.ne.lng)
-				var newBounds = new LatLngBounds(sw,ne);
-				if (!options.bounds || !options.bounds.equals(newBounds)) {
-					options.bounds = newBounds;
-					scopes.modUtils$eventManager.fireEvent(id, "bounds_changed", [objectType, id, eventType, data]);
-				}
-
-				//center_changed
-				var newCenter = new LatLng(o.center.lat,o.center.lng);
-				if (options.center && options.center.equals(newCenter)) {
-					options.center = newCenter;
-					scopes.modUtils$eventManager.fireEvent(id, "center_changed", [objectType, id, eventType, data]);
-				}
-				
-				//heading_changed
-				var newHeading = parseInt(o.heading);
-				if (o.heading && options.heading != o.heading) {
-					options.heading = newHeading;
-					scopes.modUtils$eventManager.fireEvent(id, "heading_changed", [objectType, id, eventType, data]);
-				}
-				
-				//maptypeid_changed
-				if (o.mapTypeId != options.mapTypeId) {
-					options.mapTypeId = o.mapTypeId
-					scopes.modUtils$eventManager.fireEvent(id, "maptypeid_changed", [objectType, id, eventType, data]);
-				}
-				
-				//tilt_changed
-				if (o.tilt != options.tilt) {
-					options.tilt = o.tilt
-					scopes.modUtils$eventManager.fireEvent(id, "tilt_changed", [objectType, id, eventType, data]);
-				}
-				
-				//zoom_changed
-				if (o.zoom != options.zoom) {
-					options.zoom = o.zoom;
-					scopes.modUtils$eventManager.fireEvent(id, "zoom_changed", [objectType, id, eventType, data]);
-				}
-				
-				break;
-			default:
-				application.output('Unknown Map eventType: ' + eventType)
-				return;
-			}
-			break;
-		case 'marker':
-			switch (eventType) {
-				case 'dragend': //make sure the position is saved in the object on the servoy side
-					o = JSON.parse(data);
-					options.position = new LatLng(o.position.lat, o.position.lng);
-					break;
-				case 'click':
-				case 'dblclick':
-				case 'rightclick':
-					break;
-				default:
-					application.output('Unknown Marker eventType: ' + eventType)
-					break;
-			}
-			break;
-		case 'infoWindow':
-			switch (eventType) {
-				case 'closeclick':
-					break;
-				default:
-					application.output('Unknown InfoWindow eventType: ' + eventType)
-					break;
-			}
-			
-		default:
-			application.output('Unknown GoogleMaps objectType: ' + objectType)
-			break;
-	}
-	
-	if (allObjects[id]) {
-		allObjects[id][1](); //run the updateState method
-	}
-	
-	//Fire event that the user potentially has attached
-	scopes.modUtils$eventManager.fireEvent(id, eventType, [objectType, id, eventType, data]);
 }
 
 /**
- * Array holding all Types that should be handled specially in the serializer
- * @private 
- * @type {Array}
- * @properties={typeid:35,uuid:"F61367F4-BDE9-42B1-994E-22EA719A34D9",variableType:-4}
- */
-var specialTypes = [LatLng, MapTypeId, Marker, InfoWindow, Map]
-
-/**
- * Map holding references to the inner setup of all Objects (Maps, Markers, ...) and their storeState method.
+ * Map holding references to the inner setup of all Objects (Maps, Markers, ...) and their updateState method.
  * Used by the googleMapCallback function to persists browserside updates to the map, without causing another render cycle towards the browser
  * @private
- * @type {Object<Array>}
+ * @type {Object<Function>}
  * @properties={typeid:35,uuid:"1E3B2526-74A5-4BF3-80F7-E3D540136405",variableType:-4}
  */
-var allObjects = {}
+var allObjectCallbackHandlers = {}
 
 /**
  * Implements https://developers.google.com/maps/documentation/javascript/reference#LatLng
@@ -396,6 +263,7 @@ function MapTypeId(type) {
 }
 
 /**
+ * TODO: simplify this: just make it strings
  * @type {Object<MapTypeId>}
  * @properties={typeid:35,uuid:"4508E924-9D97-41EB-9404-728C9ADF5AB6",variableType:-4}
  */
@@ -406,138 +274,107 @@ var MapTypeIds = {
 	TERRAIN: new MapTypeId('TERRAIN')
 }
 
-///**
-// * @constructor
-// *
-// * @properties={typeid:24,uuid:"9EF66E47-FA7E-4D26-9DCA-5A3DCA610C21"}
-// */
-//function Animation() {
-//	//TODO: implement
-//}
-
 /**
+ * Creates a marker with the options specified. If a map is specified, the marker is added to the map upon construction. Note that the position must be set for the marker to display.
+
  * @constructor
- * TODO: @param {{animation: Animation=,
- * 			clickable: Boolean=,
- * 			cursor: String=,
- * 			draggable: Boolean=,
- * 			flat: Boolean=,
- *			icon: String|MarkerImage|Symbol=,
- * TODO: 	map:Map|StreetViewPanorama,
- * 			map: Map,
- * 			optimized: Boolean=,
- * 			position: LatLng,
- * 			raiseOnDrag: Boolean=,
- * 			shadow: String|MarkerImage|Symbol=,
- * 			shape: MarkerShape=,
- * 			title: String=,
- * 			visible: Boolean=,
- * 			zIndex: Number=
- * }} options
+ * 
+ * @param {Boolean} [options.clickable] If true, the marker receives mouse and touch events. Default value is true.
+ * @param {String} [options.cursor] Mouse cursor to show on hover
+ * @param {Boolean} [options.draggable] If true, the marker can be dragged. Default value is false.
+ * @param {Boolean} [options.flat] If true, the marker shadow will not be displayed.
+ * @param {String} [options.icon] Icon for the foreground
+ * @param {Map} [options.map] Map on which to display Marker.
+ * @param {Boolean} [options.optimized] Optimization renders many markers as a single static element. Optimized rendering is enabled by default. Disable optimized rendering for animated GIFs or PNGs, or when each marker must be rendered as a separate DOM element (advanced usage only).
+ * @param {LatLng} options.position Marker position. Required.
+ * @param {Boolean} [options.raiseOnDrag] If false, disables raising and lowering the marker on drag. This option is true by default.
+ * @param {String} [options.shadow] Shadow image
+ * @param {String} [options.title] Rollover text
+ * @param {Boolean} [options.visible] If true, the marker is visible
+ * @param {Number} [options.zIndex] All markers are displayed on the map in order of their zIndex, with higher values displaying in front of markers with lower values. By default, markers are displayed according to their vertical position on screen, with lower markers appearing in front of markers further up the screen.
+ * 
+ * TODO		anchorPoint
+ * TODO		icon: |MarkerImage|Symbol=,
+ * TODO		shadow: |MarkerImage|Symbol=,
+ * TODO		shape: MarkerShape=,
+ * TODO 	map:Map|StreetViewPanorama,
+ * TODO		animation: Animation=,
  * 
  * TODO: As Marker props can be updated in the client (position change through drag for example), the fired event in the browser needs to be send to the server and there update the correct marker
  * AFAICS markers can only be updated when on a map and we should already know the map the marker is on, so the lookup could go through the markers array on the map
  * @properties={typeid:24,uuid:"15AF5C80-3814-47FF-B34B-7D9D40E82FBF"}
  */
 function Marker(options) {
-	var id = application.getUUID().toString()
-//	var _animation
-//	var _clickable
-//	var _cursor
-//	var _draggable
-//	var _flat
-//	var _icon
-//	/**@type {GoogleMap}*/
-//	var _map
-//	var _optimized
-//	var _position
-//	var _raiseOnDrag
-//	var _shadow
-//	var _shape
-//	var _title
-//	var _visible
-//	var _zIndex
-
-	//escape 
-	options.title = options.title.replace(/[^\w\s]/g,"");
-	
 	var markerSetup = {
-		id: id,
+		id: application.getUUID().toString(),
 		type: "marker",
 		options: options
 	}
 	
-	var listeners = {};
+	var that = this //Storing reference to the Marker instance for usage within private functions (for example onBrowserCallback)
+	
+	function onBrowserCallback(eventType, data) {
+		switch (eventType) {
+			case Marker.EVENT_TYPES.DRAGEND: //make sure the position is saved in the object on the servoy side
+				options.position = new LatLng(data.position.lat, data.position.lng);
+				break;
+			case Marker.EVENT_TYPES.CLICK:
+			case Marker.EVENT_TYPES.DBLCLICK:
+			case Marker.EVENT_TYPES.RIGHTCLICK:
+				break;
+			default:
+				application.output('Unknown Marker eventType: ' + eventType)
+				return;
+		}
+		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, [that, eventType, data]);
+		updateState()
+	}
 	
 	/**
-	 * @param {String} [incrementalUpdateCode]
+	 * @param {String} [methodName]
+	 * @param {Array} [args]
 	 */
-	function updateState(incrementalUpdateCode) {
+	function updateState(methodName, args) {
 		if (markerSetup.options.map) {
 			/** @type {Map} */
 			var map = markerSetup.options.map;
 			var _mapFormName = map.getId();
 			if (_mapFormName in forms) {
-				forms[_mapFormName].storeState(scopes.modDataVisualization.serializeObject(markerSetup, specialTypes))
 				
-				if (incrementalUpdateCode && forms[_mapFormName].isRendered()) {
-					plugins.WebClientUtils.executeClientSideJS(incrementalUpdateCode)
+				forms[_mapFormName].persistObject(markerSetup)
+				
+				if (methodName && forms[_mapFormName].isRendered()) {
+					var code = 'svyDataVis.gmaps.objects[\'' + markerSetup.id + '\'].' + methodName + '('
+					
+					args.forEach(function(value,index,array){
+						code += 'svyDataVis.JSON2Object(\'' + forms[_mapFormName].serializeObject(args[index]) + '\')'
+						if (index != --array.length) {
+							code += ','
+						}
+					})
+					
+					code += ');'
+					plugins.WebClientUtils.executeClientSideJS(code)
 				}
 			} else {
 				application.output('Invalid DataVisualizer reference') //TODO: better error messages
 			}
 		}
 	}
-//	updateState()
-	
+
 	/**
 	 * Internal API: DO NOT CALL
 	 * @return {Object}
 	 */
-	this.toObjectPresentation = function(createNew) {
-		
-		if (!createNew) {
-			return {
-				svySpecial: true, 
-				type: 'reference', 
-				parts: ['svyDataVis','gmaps', 'objects', id],
-				marker: true
-			}
-		} else {
-			return {
-	//				svySpecial: true, 
-					type: 'marker', 
-					id: id,
-	//				parts: ['svyDataVis','gmaps', 'Marker'],
-					options: {
-	//					svySpecial: true,
-						parts: ['svyDataVis','gmaps', 'Marker'],
-	//					animation: _animation,
-	//					clickable: _clickable,
-	//					cursor: _cursor,
-						draggable: markerSetup.options.draggable,
-	//					flat: _flat,
-	//					icon: _icon,
-						map: markerSetup.options.map,
-	//					optimized: _optimized,
-						position: markerSetup.options.position,
-	//					raiseOnDrag: _raiseOnDrag,
-	//					shadow: _shadow,
-	//					shape: _shape,
-						title: markerSetup.options.title
-	//					visible: _visible,
-	//					zIndex: _zIndex
-					}
-				}
+	this.toObjectPresentation = function() {
+		return {
+			svySpecial: true, 
+			type: 'reference', 
+			parts: ['svyDataVis','gmaps', 'objects', markerSetup.id]
 		}
 	}
 	
-	if (options.map) {
-		/** @type {Map} */
-		var gmap = options.map
-		gmap.addMarker(markerSetup.id, this)
-	}
-	updateState()
+	updateState();
 
 	/**
 	 * Internal API, DO NOT CALL
@@ -550,70 +387,65 @@ function Marker(options) {
 //	//Constants
 //	this.MAX_ZINDEX
 
-	//Getters
+	//Public API
 //	this.getAnimation = function() {
 //		return _animation
 //	}
-//	this.getClickable = function() {
-//		return _clickable
-//	}
-//	this.getCursor = function() {
-//		return _cursor
-//	}
+
+//	this.setAnimation = function(animation) {
+//	options.animation = animation
+//	updateState('setAnimation', [animation])
+//}
+
+	this.getClickable = function() {
+		return options.clickable
+	}
+	
+	this.setClickable = function(flag) {
+		options.clickable = flag
+		updateState('setClickable', [flag])
+	}
+	
+	this.getCursor = function() {
+		return options.cursor
+	}
+
+	this.setCursor = function(cursor) {
+		options.cursor = cursor
+		updateState('setCursor', [cursor])
+	}
+	
 	this.getDraggable = function() {
 		return options.draggable;
 	}
-//	this.getFlat = function() {
-//		return _flat
-//	}
-//	this.getIcon = function() {
-//		return _icon
-//	}
+	
+	this.setDraggable = function(draggable) {
+		options.draggable = draggable
+		updateState('setDraggable', [draggable])
+	}
+	
+	this.getFlat = function() {
+		return options.flat
+	}
+	
+	this.setFlat = function(flat) {
+		options.flat = flat
+		updateState('setFlat', [flat])
+	}
+	
+	this.getIcon = function() {
+		return options.icon
+	}
+	
+	this.setIcon = function(icon) {
+		options.icon = icon
+		updateState('setIcon', [icon])
+	}
+	
 	this.getMap = function() {
 		return options.map;
 	}
 	
-	/**
-	 * @return {LatLng}
-	 */
-	this.getPosition = function() {
-		return options.position
-	}
-//	this.getShadow = function() {
-//		return _shadow
-//	}
-//	this.getShape = function() {
-//		return _shape
-//	}
-	this.getTitle = function() {
-		return options.title;
-	}
-//	this.getVisible = function() {
-//		return _visible
-//	}
-//	this.getZIndex = function() {
-//		return _zIndex
-//	}
-
-	//Setters
-//	this.setAnimation = function(animation) {
-//		_animation = animation
-//	}
-//	this.setClickable = function(flag) {
-//		_clickable = flag
-//	}
-//	this.setCursor = function(cursor) {
-//		_cursor = cursor
-//	}
-	this.setDraggable = function(flag) {
-		options.draggable = flag
-	}
-//	this.setFlat = function(flag) {
-//		_flat = flag
-//	}
-//	this.setIcon = function(icon) {
-//		_icon = icon
-//	}
 	/**
 	 * @param {Map} map
 	 * @this {Marker}
@@ -622,17 +454,73 @@ function Marker(options) {
 		if (options.map == map) {
 			return
 		}
-		if (options.map == null) { 
-			options.map = map
+		if (options.map != null) { 
+			options.map.removeMarker(markerSetup.id)
+			options.map = null
 		}
-		map.addMarker(id, this)
-		application.output(id);
-		
-		var str = scopes.modDataVisualization.serializeObject(this.toObjectPresentation(true), specialTypes);
-
-		updateState('svyDataVis.gmaps.createMarker(JSON.parse(\'' + str + '\', svyDataVis.reviver));');
+		if (map) {
+			options.map = map
+			updateState('setMap' ,[markerSetup.options.map])	
+		}
+	}
+	
+	/**
+	 * @return {LatLng}
+	 */
+	this.getPosition = function() {
+		return options.position
+	}
+	
+	this.setPosition = function(latLng) {
+		options.position = latLng;
+		updateState('setPosition', [latLng])		
 	}
 
+	this.getShadow = function() {
+		return options.shadow
+	}
+
+	this.setShadow = function(shadow) {
+		options.shadow = shadow
+		updateState('setShadow', [shadow])
+	}
+	
+//	this.getShape = function() {
+//		return options.shape
+//	}
+
+//	this.setShape = function(shape) {
+//	options.shape = shape
+//	updateState('setShape', [shape])
+//}
+
+	this.getTitle = function() {
+		return options.title;
+	}
+	
+	this.setTitle = function(title) {
+		markerSetup.options.title = title
+		updateState('setTitle', [markerSetup.options.title])
+	}
+	
+	this.getVisible = function() {
+		return options.visible
+	}
+	
+	this.setVisible = function(visible) {
+		options.visible = visible
+		updateState('setVisible', [visible])
+	}
+
+	this.getZIndex = function() {
+		return options.zIndex
+	}
+	
+	this.setZIndex = function(zIndex) {
+		options.zIndex = zIndex
+		updateState('setZIndex', [zIndex])
+	}
+	
 	//	this.setOptions = function(options) {
 //		for each (var prop in options) {
 //			switch (prop) {
@@ -687,29 +575,42 @@ function Marker(options) {
 //				}
 //		}
 //	}
-	this.setPosition = function(latLng) {
-		options.position = latLng;
-		updateState('var latLng = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(latLng.toObjectPresentation(), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + markerSetup.id + '\'].setPosition(latLng);')		
-	}
 	
-//	this.setShadow = function(shadow) {
-//		_shadow = shadow
-//	}
-//	this.setShape = function(shape) {
-//		_shape = shape
-//	}
-	this.setTitle = function(title) {
-		markerSetup.options.title = title;
-		updateState('svyDataVis.gmaps.objects[\'' + markerSetup.id + '\'].setTitle(latLng);')		
+	this.addClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.CLICK, eventHandler);
 	}
-//	this.setVisible = function(visible) {
-//		_visible = visible
-//	}
-//	this.setZIndex = function(zIndex) {
-//		_zIndex = zIndex
-//	}
 
-	this.EVENT_TYPES = { 
+	this.addDoubleClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
+	}
+
+	this.addDragEndListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DRAGEND, eventHandler);
+	}
+
+	this.addPositionChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.POSITION_CHANGED, eventHandler);
+	}
+
+	this.addRightClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.RIGHTCLICK, eventHandler);
+	}
+
+	//TODO: removeListener
+//	
+//	this.getEventHandler = function(eventType) {
+//		return listeners[eventType];
+//	}
+	
+	allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
+}
+
+/**
+ * @protected 
+ * @properties={typeid:35,uuid:"272963C4-B1BA-4B6E-B6A3-C347EC6D1460",variableType:-4}
+ */
+var setupMarker = function(){
+	Marker.EVENT_TYPES = { 
 		CLICK            : 'click',
 		DBLCLICK         : 'dblclick',
 	//	DRAG             : 'drag',
@@ -719,72 +620,33 @@ function Marker(options) {
 	//	MOUSEOUT         : 'mouseout',
 	//	MOUSEOVER        : 'mouseover',
 	//	MOUSEUP          : 'mouseup',
-		POSITION_CHANGED : 'position_changed',
+	//	POSITION_CHANGED : 'position_changed',
 		RIGHTCLICK       : 'rightclick'
 	}
-	
-	this.addEventListener = function(eventHandler, eventType) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, eventType, eventHandler);
-	}
-	
-	this.getEventHandler = function(eventType) {
-		return listeners[eventType];
-	}
-	
-	allObjects[markerSetup.id] = [options, updateState]
-}
-
-///**
-// * @constructor
-// *
-// * @properties={typeid:24,uuid:"4A0B07DF-42B0-4C50-A1E8-CCD43AF62A9E"}
-// */
-//function MarkerImage() {
-//	//TODO: implement
-//}
-
-///**
-// * @constructor
-// *
-// * @properties={typeid:24,uuid:"16134509-41A8-45D9-8D63-BE232A780502"}
-// */
-//function MarkerShape() {
-//	//TODO: implement
-//}
+}()
 
 /**
+ * An overlay that looks like a bubble and is often connected to a marker.<br>
+ * <br>
+ * Creates an info window with the given options. An InfoWindow can be placed on a map at a particular position or above a marker, depending on what is specified in the options. Unless auto-pan is disabled, an InfoWindow will pan the map to make itself visible when it is opened. After constructing an InfoWindow, you must call open to display it on the map. The user can click the close button on the InfoWindow to remove it from the map, or the developer can call close() for the same effect.<br>
  * @constructor
- * @param {Object} options
- * @param {String} options.content
- * @param {Boolean} options.disableAutoPan
- * @param {Number} options.maxWidth
- * @param {LatLng} options.position
- * @param {Number} options.zIndex
- * @param {Marker} options.anchor
- * @param {Map} options.map
+ * 
+ * @param {String} options.content Content to display in the InfoWindow. This can be an HTML element, a plain-text string, or a string containing HTML. The InfoWindow will be sized according to the content. To set an explicit size for the content, set content to be a HTML element with that size.
+ * @param {Boolean} [options.disableAutoPan] Disable auto-pan on open. By default, the info window will pan the map so that it is fully visible when it opens.
+ * @param {Number} [options.maxWidth] Maximum width of the infowindow, regardless of content's width. This value is only considered if it is set before a call to open. To change the maximum width when changing content, call close, setOptions, and then open.
+ * TODO @param {Size} [pixelOffset] The offset, in pixels, of the tip of the info window from the point on the map at whose geographical coordinates the info window is anchored. If an InfoWindow is opened with an anchor, the pixelOffset will be calculated from the anchor's anchorPoint property.
+ * @param {LatLng} [options.position] The LatLng at which to display this InfoWindow. If the InfoWindow is opened with an anchor, the anchor's position will be used instead.
+ * @param {Number} [options.zIndex] All InfoWindows are displayed on the map in order of their zIndex, with higher values displaying in front of InfoWindows with lower values. By default, InfoWinodws are displayed according to their latitude, with InfoWindows of lower latitudes appearing in front of InfoWindows at higher latitudes. InfoWindows are always displayed in front of markers.
+
+ * 
+ * TODO: Fix this: InfoWindows do not belong to a map by default, but within Servoy it makes sense to offer this option, for performance reasons. Maybe link to an Anchor only (anchor is on Map )
  * @properties={typeid:24,uuid:"1E81E90E-BBDA-4D0C-8AB9-467196F292BC"}
  */
 function InfoWindow(options) {
-	var id = application.getUUID().toString()
-	
-	options.content = escape(options.content);
-	
 	var infoWindowSetup = {
-		id: id,
+		id: application.getUUID().toString(),
 		type: "infoWindow",
 		options: options
-	}
-	
-	this.EVENT_TYPES = {
-		CLOSECLICK: 'closeclick',
-		CONTENT_CHANGED: 'content_changed',
-		DOMREADY: 'domready',
-		POSITION_CHANGED: 'position_changed',
-		ZINDEX_CHANGED: 'zindex_changed'
-	}
-	
-	this.addEventListener = function(eventHandler, eventType) {
-		scopes.modUtils$eventManager.addListener(infoWindowSetup.id, eventType, eventHandler);
 	}
 	
 	/**
@@ -794,17 +656,21 @@ function InfoWindow(options) {
 	this.toObjectPresentation = function() {
 		return {
 			svySpecial: true, 
-			type: 'constructor', 
-			parts: ['google', 'maps', 'InfoWindow'], 
-			id: id,
-			infoWindow: true,
-			args: [{
-				map: infoWindowSetup.options.map,
-				position: infoWindowSetup.options.position,
-				content: infoWindowSetup.options.content,
-				anchor: infoWindowSetup.options.anchor
-			}] 
+			type: 'reference', 
+			parts: ['svyDataVis','gmaps', 'objects', infoWindowSetup.id]
 		}
+	}
+	
+	function onBrowserUpdate(eventType, data) {
+		switch (eventType) {
+			case 'closeclick':
+				break;
+			default:
+				application.output('Unknown InfoWindow eventType: ' + eventType)
+				return;
+		}
+		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, [this, eventType, data]);
+		updateState()
 	}
 	
 	updateState()
@@ -814,11 +680,9 @@ function InfoWindow(options) {
 	 */
 	function updateState(incrementalUpdateCode) {
 		if (infoWindowSetup.options.map) {
-			/** @type {Map} */
-			var gmap = infoWindowSetup.options.map;
-			var _mapFormName = gmap.getId();
+			var _mapFormName = infoWindowSetup.options.map.getId();
 			if (_mapFormName in forms) {
-				forms[_mapFormName].storeState(scopes.modDataVisualization.serializeObject(infoWindowSetup, specialTypes))
+				forms[_mapFormName].persistObject(infoWindowSetup)
 				
 				if (incrementalUpdateCode && forms[_mapFormName].isRendered()) {
 					plugins.WebClientUtils.executeClientSideJS(incrementalUpdateCode)
@@ -829,15 +693,21 @@ function InfoWindow(options) {
 		}
 	}
 	
-	this.close = function() {
-		//TODO: implement
-	}
-	
+	//Public APi
+	//TODO: add missing getter/setters
+	//TODO: add updateState to setters
 	/**
 	 * @return {String}
 	 */
 	this.getContent = function() {
 		return options.content;
+	}
+
+	/**
+	 * @param {String} string
+	 */
+	this.setContent = function(string) {
+		options.content = string;
 	}
 	
 	/**
@@ -845,6 +715,14 @@ function InfoWindow(options) {
 	 */
 	this.getPosition = function() {
 		return options.position;
+	}
+
+	/**
+	 * @param {LatLng} position
+	 */
+	this.setPosition = function(position) {
+		options.position = position;
+		updateState('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setPosition(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(position) + '\'));')		
 	}
 	
 	/**
@@ -855,62 +733,85 @@ function InfoWindow(options) {
 	}
 	
 	/**
-	 * @param {Map} map
-	 * @param {Marker} [anchor]
-	 * @this {InfoWindow}
-	 */
-	this.open = function(map, anchor) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
-		if (map) { 
-			options.map = map
-		}
-		if (anchor) {
-			options.anchor = anchor
-			if (!options.map) {
-				options.map = anchor.getMap();
-			}
-		}
-		/** @type {Map} */
-		var gmap = options.map
-		gmap.addInfoWindow(id, this)
-	}
-	
-	/**
-	 * @param {String} string
-	 */
-	this.setContent = function(string) {
-		options.content = string;
-	}
-
-	/**
-	 * @param {Object} opts
-	 */
-	this.setOptions = function(opts) {
-		options = opts;
-	}
-	
-	/**
-	 * @param {LatLng} position
-	 */
-	this.setPosition = function(position) {
-		options.position = position;
-		updateState('var latLng = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(position["toObjectPresentation"](), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setPosition(latLng);')		
-	}
-	
-	/**
 	 * @param {Number} number
 	 */
 	this.setZIndex = function(number) {
 		options.zIndex = number;
 	}
 	
-	allObjects[infoWindowSetup.id] = [options, updateState]
+	/**
+	 * Opens this InfoWindow on the given map. Optionally, an InfoWindow can be associated with an anchor. In the core API, the only anchor is the Marker class. However, an anchor can be any MVCObject that exposes a LatLng position property and optionally a Point anchorPoint property for calculating the pixelOffset (see InfoWindowOptions). The anchorPoint is the offset from the anchor's position to the tip of the InfoWindow.
+	 * @param {Map} mp Map to show the Infowindow on
+	 * @param {Marker} [mkr] anchor to which the InforWidnow should be linked
+	 * @this {InfoWindow}
+	 */
+	this.open = function(mp, mkr) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
+		if (!mp) { 
+			return
+		}
+		if (mkr) {
+			if (mp != mkr.getMap()) {
+				application.output('Trying to show Infowindow om map X positioned by a Marker located om Map Y. Ignorimg supplied Map X' , LOGGINGLEVEL.WARNING)
+			}
+		} else if (!this.getPosition()) {
+			application.output('Either a Position must be set or an anchor supplied in order to open a Infowindow' , LOGGINGLEVEL.WARNING)
+		}
+		
+		//updateState() //No incremental update needed: when open is called it should always execute
+		//TODO: this doesn't work on first show, because the JS code to execute is appended to the script that also opens the Servoy License popup, so way before the map is initialized
+	
+		//FIXME: if the open method is called in a form onLoad. the clientside Js executes before initializing the map. Should use the initialization mechanism
+		//FIXME: the closeclick listener impl.
+		
+		
+		var s = { svySpecial: true, type: 'constructor', parts: ['google', 'maps', 'InfoWindow'], args: [infoWindowSetup.options] }
+		plugins.WebClientUtils.executeClientSideJS('svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(s) + '\').open(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(mp) + '\')' + (mkr ? ',svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(mkr) + '\')' : '')+ ');')
+		//scopes.modUtils$WebClient.addOnLoadScript('svyDataVis.log("trying to open Infowindow");svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(s) + '\').open(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(m) + '\'));')
+
+	}
+	
+	/**
+	 * Closes this InfoWindow
+	 */
+	this.close = function() {
+		//TODO: test
+		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];')
+	}
+	
+	this.addOnCLoseListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(infoWindowSetup.id, InfoWindow.EVENT_TYPES.CLOSECLICK, eventHandler);
+	}
+
+//	/**
+//	 * @param {Object} opts
+//	 */
+//	this.setOptions = function(opts) {
+//		options = opts;
+//	}
+	
+	allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserUpdate
 }
+
+/**
+ * @protected 
+ * @properties={typeid:35,uuid:"88E6E0EC-7D75-4496-9861-3817E1DE316B",variableType:-4}
+ */
+var setupinfoWindow = function(){
+	InfoWindow.EVENT_TYPES = {
+		CLOSECLICK: 'closeclick'
+		//CONTENT_CHANGED: 'content_changed',
+		//DOMREADY: 'domready',
+		//POSITION_CHANGED: 'position_changed',
+		//ZINDEX_CHANGED: 'zindex_changed'
+	}
+}()
 
 /**
  * Google Map impl.
  * 
  * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode
  * TODO: Impl. missing Types used in options
+ * TODO: setting Projecttion and related events: make sense to have?
  * @constructor 
  * 
  * @param {RuntimeTabPanel} container the panel in which the visualization is displayed. Note: all existing tabs in the panel will be removed
@@ -960,29 +861,6 @@ function Map(container, options) {
 		id: dv.getId(),
 		type: "map",
 		options: options
-//		markers: dv.markers
-	}
-	
-	/**
-	 * Internal API, DO NOT CALL
-	 * @param {String} id
-	 * @param {Marker} marker
-	 */
-	this.addMarker = function(id, marker) {
-		dv.markers[id] = marker	
-		updateState(); //TODO: incremental code
-	}
-	
-	/**
-	 * Internal API, DO NOT CALL
-	 * @param {String} id
-	 * @param {InfoWindow} infoWindow
-	 */
-	this.addInfoWindow = function(id, infoWindow) {
-		dv.infoWindows[id] = infoWindow	
-
-		var str = scopes.modDataVisualization.serializeObject(infoWindow.toObjectPresentation(), specialTypes);
-		updateState('var infoWindow = svyDataVis.gmaps.createInfoWindow(JSON.parse(\'' + str + '\', svyDataVis.reviver));'); 
 	}
 	
 	/**
@@ -990,8 +868,9 @@ function Map(container, options) {
 	 * @param {String} id
 	 */
 	this.removeMarker = function (id) {
-		delete dv.markers[id]
-		updateState("svyDataVis.gmaps.removeMarker('"+id+"')");
+		forms[mapSetup.id].desistObject(id)
+		updateState();
+		plugins.WebClientUtils.executeClientSideJS("svyDataVis.gmaps.removeMarker('"+id+"')")
 	}
 	
 	/**
@@ -1014,21 +893,95 @@ function Map(container, options) {
 		return mapSetup.id;
 	}
 	
+	function onBrowserCallback(eventType, data) {
+		switch (eventType) {
+			case Map.EVENT_TYPES.CLICK:
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CLICK, [this, Map.EVENT_TYPES.CLICK, data]);
+				break; 
+			case Map.EVENT_TYPES.DBLCLICK:
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, [this, Map.EVENT_TYPES.DBLCLICK, data]);
+				break; 
+			case 'idle': //Handling majority of the events through the idle event, to prevent event firing galore
+				//bounds_changed
+				var sw = new LatLng(data.bounds.sw.lat, data.bounds.sw.lng)
+				var ne = new LatLng(data.bounds.ne.lat, data.bounds.ne.lng)
+				var newBounds = new LatLngBounds(sw,ne);
+				if (!options.bounds || !options.bounds.equals(newBounds)) {
+					options.bounds = newBounds;
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, [this, Map.EVENT_TYPES.BOUNDS_CHANGED, data]);
+				}
+	
+				//center_changed
+				var newCenter = new LatLng(data.center.lat, data.center.lng);
+				if (options.center && options.center.equals(newCenter)) {
+					options.center = newCenter;
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, [this, Map.EVENT_TYPES.CENTER_CHANGED, data]);
+				}
+				
+				//heading_changed
+				var newHeading = parseInt(data.heading);
+				if (data.heading && options.heading != data.heading) {
+					options.heading = newHeading;
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, [this, Map.EVENT_TYPES.HEADING_CHANGED, data]);
+				}
+				
+				//maptypeid_changed
+				if (data.mapTypeId != options.mapTypeId) {
+					options.mapTypeId = data.mapTypeId
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, [this, Map.EVENT_TYPES.MAPTYPEID_CHANGED, data]);
+				}
+	
+				//projection_changed
+//				if (o.projection != options.projection) {
+//					
+//					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
+//				}
+				
+				//tilt_changed
+				if (data.tilt != options.tilt) {
+					options.tilt = data.tilt
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, [this, Map.EVENT_TYPES.TILT_CHANGED, data]);
+				}
+				
+				//zoom_changed
+				if (data.zoom != options.zoom) {
+					options.zoom = data.zoom;
+					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [this, Map.EVENT_TYPES.ZOOM_CHANGED, data]);
+				}
+				break;
+			default:
+				application.output('Unknown Map eventType: ' + eventType)
+				return;
+		}
+		updateState()
+	}
 	
 	/**
-	 * @param {String} [incrementalUpdateCode]
+	 * @param {String} [methodName]
+	 * @param {Array} [args]
 	 */
-	function updateState(incrementalUpdateCode) {
+	function updateState(methodName, args) {
 		if (mapSetup.id in forms) {
-			forms[mapSetup.id].storeState(scopes.modDataVisualization.serializeObject(mapSetup, specialTypes))
+			forms[mapSetup.id].persistObject(mapSetup)
 			
-			if (incrementalUpdateCode && forms[mapSetup.id].isRendered()) {
-				plugins.WebClientUtils.executeClientSideJS(incrementalUpdateCode)
-			}
+			if (methodName && forms[mapSetup.id].isRendered()) {
+					var code = 'svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].' + methodName + '('
+					
+					args.forEach(function(value,index,array){
+						code += 'svyDataVis.JSON2Object(\'' + forms[mapSetup.id].serializeGMapTypes(args[index]) + '\')'
+						if (array.length != -index) {
+							code += ','
+						}
+					})
+					
+					code += ');'
+					plugins.WebClientUtils.executeClientSideJS(code)
+				}
 		} else {
 			application.output('Invalid DataVisualizer reference') //TODO: better error messages
 		}
 	}
+	
 	updateState()
 	
 	/* Scripting API
@@ -1037,7 +990,7 @@ function Map(container, options) {
 	 * @param {LatLngBounds} bounds
 	 */
 	this.fitBounds = function(bounds) {
-		updateState('var bounds = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(bounds.toObjectPresentation(), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].fitBounds(bounds);')
+		updateState('fitBounds', [bounds])
 	}
 
 //	/**
@@ -1136,14 +1089,15 @@ function Map(container, options) {
 	 */
 	this.panTo = function(latLng) {
 		options.center = latLng;
-		updateState('var latLng = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(latLng["toObjectPresentation"](), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panTo(latLng);')		
+		updateState('var latLng = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(latLng) + '\');svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panTo(latLng);')		
 	}
 
 	/**
 	 * @param {LatLngBounds} bounds
 	 */
 	this.panToBounds = function(bounds){
-		plugins.WebClientUtils.executeClientSideJS('var bounds = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(bounds.toObjectPresentation(), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		//CHEKCME: why using WCUtils plugin here and not update state?
+		plugins.WebClientUtils.executeClientSideJS('var bounds = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyDataVis.JSON2Object();svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**
@@ -1151,7 +1105,7 @@ function Map(container, options) {
 	 */
 	this.setCenter = function(latLng) {
 		options.center = latLng
-		updateState('var latLng = JSON.parse(\'' + scopes.modDataVisualization.serializeObject(latLng["toObjectPresentation"](), specialTypes) + '\', svyDataVis.reviver);svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].setCenter(latLng);')
+		updateState('setCenter',[latLng])
 	}
 
 	/**
@@ -1159,7 +1113,7 @@ function Map(container, options) {
 	 */
 	this.setHeading = function(heading) {
 		options.heading = heading
-		updateState('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].setHeading(' + heading + ');')
+		updateState('setHeading', [heading])
 	}
 
 	/**
@@ -1167,7 +1121,7 @@ function Map(container, options) {
 	 */
 	this.setMapTypeId = function(mapTypeId) {
 		options.mapTypeId = mapTypeId
-		updateState('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].setMapTypId(' + mapTypeId + ');')
+		updateState('setMapTypId', [mapTypeId])
 	}
 
 //	/**
@@ -1176,17 +1130,17 @@ function Map(container, options) {
 //	this.setOptions = function(options) {
 //	}
 
-	/**
-	 * TODO: @param {StreetViewPanorama} panorama
-	 */
-	this.setStreetView = function(panorama) {}
+//	/**
+//	 * @param {StreetViewPanorama} panorama
+//	 */
+//	this.setStreetView = function(panorama) {}
 	
 	/**
 	 * @param {Number} tilt
 	 */
 	this.setTilt = function(tilt) {
 		options.tilt = tilt
-		updateState('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].setTilt(' + tilt + ');')
+		updateState('setTilt', [tilt])
 	}
 	
 	/**
@@ -1194,14 +1148,87 @@ function Map(container, options) {
 	 */
 	this.setZoom = function(zoom) {
 		options.zoom = zoom
-		updateState('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].setZoom(' + zoom + ');')
+		updateState('setZoom', [zoom])
 	}
 	
 	this.controls = [] //TODO: implement what needs implementing for this property
+	
 	this.mapTypes = null //TODO: implement what needs implementing for this property
+	
 	this.overlayMapTypes = [] //TODO: implement what needs implementing for this property
 	
-	this.EVENT_TYPES = {
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addBoundChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, eventHandler);
+	}
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addCenterChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, eventHandler);
+	}
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CLICK, eventHandler);
+	}
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addDoubleClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, eventHandler);
+	}	
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addHeadingChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, eventHandler);
+	}	
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addMapTypeIdListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, eventHandler);
+	}	
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addProjectionChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
+	}	
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addTiltChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, eventHandler);
+	}		
+	
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addZoomChangedListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
+	}	
+	
+	allObjectCallbackHandlers[mapSetup.id] = onBrowserCallback
+}
+
+/**
+ * @protected //Can't use inheritance, but using @protected instead of @private doesn't result in a builder marker that initMap is never used
+ * @properties={typeid:35,uuid:"EFFB21C7-0C82-493F-8848-35FBA73DB840",variableType:-4}
+ */
+var setupMap = function () {
+	Map.EVENT_TYPES = {
 		BOUNDS_CHANGED: 'bounds_changed',
 		CENTER_CHANGED: 'center_changed',
 		CLICK: 'click',
@@ -1222,18 +1249,34 @@ function Map(container, options) {
 		TILT_CHANGED: 'tilt_changed',
 		ZOOM_CHANGED: 'zoom_changed'
 	}
-	
-	/**
-	 * @param {Function} eventHandler
-	 * @param {String} eventType
-	 */
-	this.addEventListener = function(eventHandler, eventType) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, eventType, eventHandler);
-	}
-	
-	allObjects[mapSetup.id] = [options, updateState]
-}
+}()
 
+///**
+//* @constructor
+//*
+//* @properties={typeid:24,uuid:"9EF66E47-FA7E-4D26-9DCA-5A3DCA610C21"}
+//*/
+//function Animation() {
+//	//TODO: implement
+//}
+
+///**
+//* @constructor
+//*
+//* @properties={typeid:24,uuid:"4A0B07DF-42B0-4C50-A1E8-CCD43AF62A9E"}
+//*/
+//function MarkerImage() {
+//	//TODO: implement
+//}
+
+///**
+//* @constructor
+//*
+//* @properties={typeid:24,uuid:"16134509-41A8-45D9-8D63-BE232A780502"}
+//*/
+//function MarkerShape() {
+//	//TODO: implement
+//}
 
 ///**
 // * @constructor
