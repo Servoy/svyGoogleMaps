@@ -300,8 +300,6 @@ var MapTypeIds = {
  * TODO 	map:Map|StreetViewPanorama,
  * TODO		animation: Animation=,
  * 
- * TODO: As Marker props can be updated in the client (position change through drag for example), the fired event in the browser needs to be send to the server and there update the correct marker
- * AFAICS markers can only be updated when on a map and we should already know the map the marker is on, so the lookup could go through the markers array on the map
  * @properties={typeid:24,uuid:"15AF5C80-3814-47FF-B34B-7D9D40E82FBF"}
  */
 function Marker(options) {
@@ -336,19 +334,17 @@ function Marker(options) {
 	 */
 	function updateState(methodName, args) {
 		if (markerSetup.options.map) {
-			/** @type {Map} */
-			var map = markerSetup.options.map;
-			var _mapFormName = map.getId();
-			if (_mapFormName in forms) {
+			/**@type {RuntimeForm<GoogleMap>}*/
+			var map = forms[markerSetup.options.map.getId()]
+			if (map) {
+				map.persistObject(markerSetup, true)
 				
-				forms[_mapFormName].persistObject(markerSetup)
-				
-				if (methodName && forms[_mapFormName].isRendered()) {
+				if (methodName && map.isRendered()) {
 					var code = 'svyDataVis.gmaps.objects[\'' + markerSetup.id + '\'].' + methodName + '('
 					
 					args.forEach(function(value,index,array){
-						code += 'svyDataVis.JSON2Object(\'' + forms[_mapFormName].serializeObject(args[index]) + '\')'
-						if (index != --array.length) {
+						code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
+						if (index != array.length - 1) {
 							code += ','
 						}
 					})
@@ -639,10 +635,11 @@ var setupMarker = function(){
  * @param {Number} [options.zIndex] All InfoWindows are displayed on the map in order of their zIndex, with higher values displaying in front of InfoWindows with lower values. By default, InfoWinodws are displayed according to their latitude, with InfoWindows of lower latitudes appearing in front of InfoWindows at higher latitudes. InfoWindows are always displayed in front of markers.
 
  * 
- * TODO: Fix this: InfoWindows do not belong to a map by default, but within Servoy it makes sense to offer this option, for performance reasons. Maybe link to an Anchor only (anchor is on Map )
+ * TODO: improve: InfoWindows do not belong to a map by default, but within Servoy it makes sense to offer this option, for performance reasons. Maybe link to an Anchor only (anchor is on Map )
  * @properties={typeid:24,uuid:"1E81E90E-BBDA-4D0C-8AB9-467196F292BC"}
  */
 function InfoWindow(options) {
+	var isShowing = false
 	var infoWindowSetup = {
 		id: application.getUUID().toString(),
 		type: "infoWindow",
@@ -664,33 +661,13 @@ function InfoWindow(options) {
 	function onBrowserUpdate(eventType, data) {
 		switch (eventType) {
 			case 'closeclick':
+				isShowing = false
 				break;
 			default:
 				application.output('Unknown InfoWindow eventType: ' + eventType)
 				return;
 		}
 		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, [this, eventType, data]);
-		updateState()
-	}
-	
-	updateState()
-	
-	/**
-	 * @param {String} [incrementalUpdateCode]
-	 */
-	function updateState(incrementalUpdateCode) {
-		if (infoWindowSetup.options.map) {
-			var _mapFormName = infoWindowSetup.options.map.getId();
-			if (_mapFormName in forms) {
-				forms[_mapFormName].persistObject(infoWindowSetup)
-				
-				if (incrementalUpdateCode && forms[_mapFormName].isRendered()) {
-					plugins.WebClientUtils.executeClientSideJS(incrementalUpdateCode)
-				}
-			} else {
-				application.output('Invalid DataVisualizer reference') //TODO: better error messages
-			}
-		}
 	}
 	
 	//Public APi
@@ -704,10 +681,13 @@ function InfoWindow(options) {
 	}
 
 	/**
-	 * @param {String} string
+	 * @param {String} content
 	 */
-	this.setContent = function(string) {
-		options.content = string;
+	this.setContent = function(content) {
+		options.content = content;
+		if (isShowing) {
+			plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setCOntent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+		}
 	}
 	
 	/**
@@ -722,7 +702,7 @@ function InfoWindow(options) {
 	 */
 	this.setPosition = function(position) {
 		options.position = position;
-		updateState('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setPosition(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(position) + '\'));')		
+		//No need to update if showing: gmaps won't the position of a visible InfoWindow anyway
 	}
 	
 	/**
@@ -757,23 +737,18 @@ function InfoWindow(options) {
 			application.output('Either a Position must be set or an anchor supplied in order to open a Infowindow' , LOGGINGLEVEL.WARNING)
 		}
 		
-		//updateState() //No incremental update needed: when open is called it should always execute
-		//TODO: this doesn't work on first show, because the JS code to execute is appended to the script that also opens the Servoy License popup, so way before the map is initialized
-	
-		//FIXME: if the open method is called in a form onLoad. the clientside Js executes before initializing the map. Should use the initialization mechanism
-		//FIXME: the closeclick listener impl.
-		
-		
-		var s = { svySpecial: true, type: 'constructor', parts: ['google', 'maps', 'InfoWindow'], args: [infoWindowSetup.options] }
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(s) + '\').open(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(mp) + '\')' + (mkr ? ',svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(mkr) + '\')' : '')+ ');')
-		//scopes.modUtils$WebClient.addOnLoadScript('svyDataVis.log("trying to open Infowindow");svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(s) + '\').open(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(m) + '\'));')
-
+		isShowing = true
+		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		var s = { svySpecial: true, type: 'call', parts: ['svyDataVis', 'gmaps', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
+		var tmp = application.getUUID().toString()
+		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
 	 * Closes this InfoWindow
 	 */
 	this.close = function() {
+		isShowing = false
 		//TODO: test
 		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];')
 	}
@@ -809,7 +784,7 @@ var setupinfoWindow = function(){
 /**
  * Google Map impl.
  * 
- * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode
+ * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
  * TODO: Impl. missing Types used in options
  * TODO: setting Projecttion and related events: make sense to have?
  * @constructor 
@@ -862,6 +837,7 @@ function Map(container, options) {
 		type: "map",
 		options: options
 	}
+	dv = null
 	
 	/**
 	 * Internal API, DO NOT CALL
@@ -906,48 +882,41 @@ function Map(container, options) {
 				var sw = new LatLng(data.bounds.sw.lat, data.bounds.sw.lng)
 				var ne = new LatLng(data.bounds.ne.lat, data.bounds.ne.lng)
 				var newBounds = new LatLngBounds(sw,ne);
-				if (!options.bounds || !options.bounds.equals(newBounds)) {
-					options.bounds = newBounds;
+				if (!mapSetup.options.bounds || !mapSetup.options.bounds.equals(newBounds)) {
+					mapSetup.options.bounds = newBounds;
 					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, [this, Map.EVENT_TYPES.BOUNDS_CHANGED, data]);
 				}
 	
 				//center_changed
 				var newCenter = new LatLng(data.center.lat, data.center.lng);
-				if (options.center && options.center.equals(newCenter)) {
-					options.center = newCenter;
+				if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
+					mapSetup.options.center = newCenter;
 					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, [this, Map.EVENT_TYPES.CENTER_CHANGED, data]);
 				}
 				
-				//heading_changed
-				var newHeading = parseInt(data.heading);
-				if (data.heading && options.heading != data.heading) {
-					options.heading = newHeading;
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, [this, Map.EVENT_TYPES.HEADING_CHANGED, data]);
-				}
-				
-				//maptypeid_changed
-				if (data.mapTypeId != options.mapTypeId) {
-					options.mapTypeId = data.mapTypeId
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, [this, Map.EVENT_TYPES.MAPTYPEID_CHANGED, data]);
-				}
-	
 				//projection_changed
 //				if (o.projection != options.projection) {
 //					
 //					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
 //				}
 				
-				//tilt_changed
-				if (data.tilt != options.tilt) {
-					options.tilt = data.tilt
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, [this, Map.EVENT_TYPES.TILT_CHANGED, data]);
-				}
-				
 				//zoom_changed
-				if (data.zoom != options.zoom) {
-					options.zoom = data.zoom;
+				if (data.zoom != mapSetup.options.zoom) {
+					mapSetup.options.zoom = data.zoom;
 					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [this, Map.EVENT_TYPES.ZOOM_CHANGED, data]);
 				}
+				break;
+			case Map.EVENT_TYPES.HEADING_CHANGED:
+				mapSetup.options.heading = parseInt(data)
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, [this, Map.EVENT_TYPES.HEADING_CHANGED, data]);
+				break;
+			case Map.EVENT_TYPES.MAPTYPEID_CHANGED:
+				mapSetup.options.mapTypeId = data
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, [this, Map.EVENT_TYPES.MAPTYPEID_CHANGED, data]);
+				break;
+			case Map.EVENT_TYPES.TILT_CHANGED:
+				mapSetup.options.tilt = data
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, [this, Map.EVENT_TYPES.TILT_CHANGED, data]);
 				break;
 			default:
 				application.output('Unknown Map eventType: ' + eventType)
@@ -961,15 +930,17 @@ function Map(container, options) {
 	 * @param {Array} [args]
 	 */
 	function updateState(methodName, args) {
-		if (mapSetup.id in forms) {
-			forms[mapSetup.id].persistObject(mapSetup)
+		/**@type {RuntimeForm<GoogleMap>}*/
+		var map = forms[mapSetup.id]
+		if (map) {
+			map.persistObject(mapSetup)
 			
-			if (methodName && forms[mapSetup.id].isRendered()) {
+			if (methodName && map.isRendered()) {
 					var code = 'svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].' + methodName + '('
 					
 					args.forEach(function(value,index,array){
-						code += 'svyDataVis.JSON2Object(\'' + forms[mapSetup.id].serializeGMapTypes(args[index]) + '\')'
-						if (array.length != -index) {
+						code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
+						if (index != array.length - 1) {
 							code += ','
 						}
 					})
@@ -987,41 +958,27 @@ function Map(container, options) {
 	/* Scripting API
 	 */
 	/**
+	 * Sets the viewport to contain the given bounds.
 	 * @param {LatLngBounds} bounds
 	 */
 	this.fitBounds = function(bounds) {
 		updateState('fitBounds', [bounds])
 	}
 
-//	/**
-//	 * @return {LatLngBounds}
-//	 */
-//	this.getBounds = function() {}
-
 	/**
+	 * Returns the lat/lng bounds of the current viewport.<br>
+	 * If more than one copy of the world is visible, the bounds range in longitude from -180 to 180 degrees inclusive.<br>
+	 * If the map is not yet initialized (i.e. the mapType is still null), or center and zoom have not been set then the result is null or undefined.
+	 * 
 	 * @return {LatLngBounds}
 	 */
-	this.getMarkerBounds = function() {
-		/** @type {LatLngBounds} */
-		var bounds;
-		var index = 1;
-		
-		/** @type {RuntimeForm<GoogleMap>} */
-		var form = forms[this.getId()]
-		if (form.markers) {
-			for (var i in form.markers) {
-				if (index == 1) {
-					bounds = new LatLngBounds(form.markers[i].getPosition(), form.markers[i].getPosition());
-				} else {
-					bounds.extend(form.markers[i].getPosition());
-				}
-				index++;
-			}
-		}
-		return bounds;
+	this.getBounds = function() {
+		return mapSetup.options['bounds']
 	}
+
 	
 	/**
+	 * Returns the position displayed at the center of the map. Note that this LatLng object is not wrapped. See {@link #LatLng} for more information.
 	 * @return {LatLng}
 	 */
 	this.getCenter = function() {
@@ -1035,6 +992,7 @@ function Map(container, options) {
 //	this.getDiv = function() {}
 
 	/**
+	 * Returns the compass heading of aerial imagery. The heading value is measured in degrees (clockwise) from cardinal direction North.
 	 * @return {Number}
 	 */
 	this.getHeading = function() {
@@ -1049,6 +1007,8 @@ function Map(container, options) {
 	}
 
 //	/**
+//   * Returns the current Projection. If the map is not yet initialized (i.e. the mapType is still null) then the result is null.<br>
+//   * Listen to projection_changed and check its value to ensure it is not null.
 //	 * @return {Projection}
 //	 */
 //	this.getProjection = function() {
@@ -1056,12 +1016,16 @@ function Map(container, options) {
 //	}
 //
 //	/**
+//   * Returns the default StreetViewPanorama bound to the map, which may be a default panorama embedded within the map, or the panorama set using setStreetView().<br>
+//   * Changes to the map's streetViewControl will be reflected in the display of such a bound panorama.
 //	 * @return {StreetViewPanorama}
 //	 */
 //	this.getStreetView = function() {
 //	}
 
 	/**
+	 * Returns the angle of incidence for aerial imagery (available for SATELLITE and HYBRID map types) measured in degrees from the viewport plane to the map plane.<br>
+	 * A value of 0 indicates no angle of incidence (no tilt) while 45° imagery will return a value of 45.
 	 * @return {Number}
 	 */
 	this.getTilt = function() {
@@ -1076,6 +1040,9 @@ function Map(container, options) {
 	}
 
 	/**
+	 * Changes the center of the map by the given distance in pixels.<br>
+	 * If the distance is less than both the width and height of the map, the transition will be smoothly animated.<br>
+	 * Note that the map coordinate system increases from west to east (for x values) and north to south (for y values).
 	 * @param {Number} x
 	 * @param {Number} y
 	 */
@@ -1085,6 +1052,7 @@ function Map(container, options) {
 	}
 
 	/**
+	 * Changes the center of the map to the given LatLng. If the change is less than both the width and height of the map, the transition will be smoothly animated.
 	 * @param {LatLng} latLng
 	 */
 	this.panTo = function(latLng) {
@@ -1093,6 +1061,11 @@ function Map(container, options) {
 	}
 
 	/**
+	 * Pans the map by the minimum amount necessary to contain the given LatLngBounds.<br>
+	 * It makes no guarantee where on the map the bounds will be, except that as much of the bounds as possible will be visible.<br>
+	 * The bounds will be positioned inside the area bounded by the map type and navigation (pan, zoom, and Street View) controls, if they are present on the map.<br>
+	 * If the bounds is larger than the map, the map will be shifted to include the northwest corner of the bounds.<br>
+	 * If the change in the map's position is less than both the width and height of the map, the transition will be smoothly animated.
 	 * @param {LatLngBounds} bounds
 	 */
 	this.panToBounds = function(bounds){
@@ -1109,6 +1082,7 @@ function Map(container, options) {
 	}
 
 	/**
+	 * Sets the compass heading for aerial imagery measured in degrees from cardinal direction North.
 	 * @param {Number} heading
 	 */
 	this.setHeading = function(heading) {
@@ -1131,11 +1105,15 @@ function Map(container, options) {
 //	}
 
 //	/**
+//   * Binds a StreetViewPanorama to the map. This panorama overrides the default StreetViewPanorama, allowing the map to bind to an external panorama outside of the map.<br>
+//   * Setting the panorama to null binds the default embedded panorama back to the map.
 //	 * @param {StreetViewPanorama} panorama
 //	 */
 //	this.setStreetView = function(panorama) {}
 	
 	/**
+	 * Sets the angle of incidence for aerial imagery (available for SATELLITE and HYBRID map types) measured in degrees from the viewport plane to the map plane.<br>
+	 * The only supported values are 0, indicating no angle of incidence (no tilt), and 45 indicating a tilt of 45deg;.
 	 * @param {Number} tilt
 	 */
 	this.setTilt = function(tilt) {
@@ -1151,11 +1129,11 @@ function Map(container, options) {
 		updateState('setZoom', [zoom])
 	}
 	
-	this.controls = [] //TODO: implement what needs implementing for this property
-	
-	this.mapTypes = null //TODO: implement what needs implementing for this property
-	
-	this.overlayMapTypes = [] //TODO: implement what needs implementing for this property
+//	this.controls = [] //TODO: implement what needs implementing for this property
+//	
+//	this.mapTypes = null //TODO: implement what needs implementing for this property
+//	
+//	this.overlayMapTypes = [] //TODO: implement what needs implementing for this property
 	
 	/**
 	 * @param {Function} eventHandler

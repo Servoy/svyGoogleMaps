@@ -10,7 +10,7 @@ $("document").ready(function() {
 		
 svyDataVis.gmaps = {
 	objects: {},
-	todos: {},
+	todos: [],
 	
 	createMarker: function(node) {
 		var marker = new google.maps.Marker(node.options)
@@ -36,8 +36,6 @@ svyDataVis.gmaps = {
 	},
 	
 	createInfoWindow: function(node) {
-		node.content = node.content;
-		
 		//Create infoWindow in the browser
 		var infoWindow = new google.maps.InfoWindow(node)
 		infoWindow.set('svyId',node.id)
@@ -58,62 +56,99 @@ svyDataVis.gmaps = {
 	},
 	
 	initialize: function() {
-		svyDataVis.log('CHECK: initialize called for GMAPS: ' + arguments.length + ' - '+ window.google + ' - ' + (arguments.length > 0 ? arguments[0] : ''))
+		svyDataVis.log('CHECK: initialize called for GMAPS: ' + (arguments.length > 0 ? Array.prototype.slice.call(arguments).join() : ' -none-'))
 		
-		$.each(arguments, function(key, value){
-			svyDataVis.log('Adding TODO: ' + value)
-			svyDataVis.gmaps.todos[value] = true
+		$.each(arguments, function(key, value) { //Storing the ID's to initialize in case initialize is called before the Maps API is loaded
+			svyDataVis.gmaps.todos.push(value)
 		})
 	
 		if (!window.google || google == undefined || !google.maps) {
 			return
 		}
 		
-		$.each(this.todos, function(value) {
+		//Loop through todo's as long as todo's is not empty and the previous loop managed to process one of the todo's (so the order of items in todo's and their dependencies don't matter
+		var loopProcessed = true
 		
-			svyDataVis.log('Processing TODO: ' + svyDataVis.gmaps[value])
-			var node = svyDataVis.JSON2Object(svyDataVis.gmaps[value])
-
-			if (node && node.type == "map") {
-				//Create new Map in the browser
-				var map = new google.maps.Map(document.getElementById(node.id), node.options)
-				map.set('svyId',node.id)
-				svyDataVis.gmaps.objects[node.id] = map
+		var i = this.todos.length - arguments.length //Offsetting i used in for loop over this.todos to first process entries for which initialize was called specifically
+		while (this.todos.length && loopProcessed) { 
+			loopProcessed = false
+			
+			for (; i < this.todos.length; i++) {
+				var value = this.todos[i]
+				svyDataVis.log('Processing TODO: ' + svyDataVis.gmaps[value])
+				var node = svyDataVis.JSON2Object(svyDataVis.gmaps[value])
+				if (node === null) continue; //explicit null is returned when JSON2Object failed because of references to other objects that aren't there yet
 				
-				//Add event listeners
-				var events = [
-					'idle', //Using idle event for most events, to prevent event firing galore
-//					'bounds_changed', 
-//					'center_changed', 
-					'click', 
-					'dblclick', 
-//					'heading_changed', 
-//					'maptypeid_changed', 
-//					'projection_changed',
-//					'tilt_changed'
-//					'zoom_changed',
-				];
+				svyDataVis.gmaps.todos.splice(i,1) //Remove TODO
+				i-- //Correct i index for removed entry in this.todos
+				delete svyDataVis.gmaps[value] //Remove intermediate storage 
 				
-				for (var j = 0; j < events.length; j++) {
-					var handler = function(id, eventType){
-						return function(event) {
-							svyDataVis.gmaps.callbackIntermediate("map", id, eventType, event)
+				if (node === undefined) continue; //Undefined can be returned by JSON2Object when the json parsed was containing a call
+				
+				loopProcessed = true
+				switch (node.type) {
+					case "map":
+						//Create new Map in the browser
+						var map = new google.maps.Map(document.getElementById(node.id), node.options)
+						map.set('svyId',node.id)
+						svyDataVis.gmaps.objects[node.id] = map
+						
+						//Add event listeners
+						var events = [
+							'idle', //Using idle event instead of bounds/center/zoom_changed, to prevent event firing galore
+		//					'bounds_changed', 
+		//					'center_changed', 
+							'click', 
+							'dblclick', 
+							'heading_changed', 
+							'maptypeid_changed', 
+		//					'projection_changed',
+							'tilt_changed'
+		//					'zoom_changed',
+						];
+						
+						for (var j = 0; j < events.length; j++) {
+							var handler = function(id, eventType){
+								return function(event) {
+									svyDataVis.gmaps.callbackIntermediate("map", id, eventType, event)
+								}
+							}(node.id, events[j])
+							google.maps.event.addListener(map, events[j], handler);
 						}
-					}(node.id, events[j])
-					google.maps.event.addListener(map, events[j], handler);
+						
+						//TODO: finish this code to listen to streetview becoming active and send that to the server for persisting
+						//http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode
+						//http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
+//						var panorama = map.getStreetView();
+//
+//						google.maps.event.addListener(panorama, 'visible_changed', function() {
+//
+//						    if (thePanorama.getVisible()) {
+//
+//						        // Display your street view visible UI
+//
+//						    } else {
+//
+//						        // Display your original UI
+//
+//						    }
+//
+//						});
+						break
+					case "marker":
+						//Create marker in the browser
+						svyDataVis.gmaps.createMarker(node);
+						break;
+					case "infoWindow":
+						//Create infoWindow in the browser
+						svyDataVis.gmaps.createInfoWindow(node)
+						break
+					default:
+						svyDataVis.log('Unknown node type: ' + node.type)
 				}
-				
-			} else if (node && node.type == "marker"){
-				//Create marker in the browser
-//						svyDataVis.log(id);
-				svyDataVis.gmaps.createMarker(node);
-			} else if (node && node.type == "infoWindow") {
-				//Create infoWindow in the browser
-				svyDataVis.gmaps.createInfoWindow(node)
 			}
-			delete svyDataVis.gmaps.todos[value]
-			delete svyDataVis.gmaps[value]
-		})
+			i = 0
+		}
 	},
 	
 	callbackIntermediate: function(objectType, id, eventType, event) {
@@ -123,31 +158,32 @@ svyDataVis.gmaps = {
 		var object = svyDataVis.gmaps.objects[id];
 		switch (objectType) {
 			case 'map': 
+				//TODO: the heading/tilt_changed events ought to be throttled
 				switch (eventType) {
 //					case 'bounds_changed':
 //						break;
 //					case 'center_changed':
 //						data = JSON.stringify({lat: map.getCenter().lat(), lng: map.getCenter().lng()})
 //						break;
-//					case 'click':
-//						svyDataVis.log('click');
-//						break;
+					case 'click':
+					case 'dblclick':
+						//TODO: send some useful info in, like position?
+						//data = ...
+						break;
 //					case 'position_changed':
 //						svyDataVis.log('click');
 //						break;
-//					case 'dblclick':
-//						break;
-//					case 'heading_changed':
-//						data = map.getHeading() 
-//						break;
-//					case 'maptypeid_changed':
-//						data = map.getMapTypeId()
-//						break;
+					case 'heading_changed':
+						data = object.getHeading() 
+						break;
+					case 'maptypeid_changed':
+						data = object.getMapTypeId()
+						break;
 //					case 'projection_changed':
 //						break;
-//					case 'tilt_changed':
-//						data = map.getTilt()
-//						break;
+					case 'tilt_changed':
+						data = object.getTilt()
+						break;
 //					case 'zoom_changed':
 //						data = map.getZoom();
 //						break;
@@ -155,14 +191,11 @@ svyDataVis.gmaps = {
 						//Pass position and mapid to Servoy
 						bounds = object.getBounds()
 					
-						data = JSON.stringify({
+						data = {
 							bounds: {sw: {lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng()}, ne: {lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng()}},
-									center: {lat: object.getCenter().lat(), lng: object.getCenter().lng()},
-									heading: object.getHeading(),
-									mapTypeId: object.getMapTypeId(),
-									tilt: object.getTilt(),
-									zoom: object.getZoom()
-						})
+							center: {lat: object.getCenter().lat(), lng: object.getCenter().lng()},
+							zoom: object.getZoom()
+						}
 						break;
 					default:
 						break;
@@ -179,10 +212,10 @@ svyDataVis.gmaps = {
 //						break;
 					default:
 								//Pass position and mapid to Servoy
-						data = JSON.stringify({
+						data = {
 									position: {lat: object.getPosition().lat(), lng: object.getPosition().lng()},
 									mapid: object.map.svyId
-						})		
+						}	
 						break;
 				}
 				break; //break 'marker' case
@@ -192,7 +225,7 @@ svyDataVis.gmaps = {
 				break; //break 'infowindow' case
 		}
 		//Call the mapsEventHandler that will call the Servoy callback
-		this.mapsEventHandler(objectType, id, eventType,data)
+		this.mapsEventHandler(objectType, id, eventType, JSON.stringify(data))
 	}
 }
 	
