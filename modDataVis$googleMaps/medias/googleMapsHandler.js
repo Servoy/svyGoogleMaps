@@ -18,7 +18,7 @@ svyDataVis.gmaps = {
 		svyDataVis.gmaps.objects[node.id] = marker
 		
 		//Add event listeners
-		var events = ['click', 'dblclick', 'dragend', 'rightclick'];
+		var events = ['click', 'dblclick', 'rightclick', 'dragend'];
 		for (var j = 0; j < events.length; j++) {
 			var handler = function(id, eventType){
 				return function(event) {
@@ -163,15 +163,13 @@ svyDataVis.gmaps = {
 //					case 'bounds_changed':
 //						break;
 //					case 'center_changed':
-//						data = JSON.stringify({lat: map.getCenter().lat(), lng: map.getCenter().lng()})
 //						break;
 					case 'click':
 					case 'dblclick':
-						//TODO: send some useful info in, like position?
-						//data = ...
+					case 'rightclick':
+						data = {position: {lat: event.latLng.lat(), lng: event.latLng.lng()}}
 						break;
 //					case 'position_changed':
-//						svyDataVis.log('click');
 //						break;
 					case 'heading_changed':
 						data = object.getHeading() 
@@ -185,12 +183,9 @@ svyDataVis.gmaps = {
 						data = object.getTilt()
 						break;
 //					case 'zoom_changed':
-//						data = map.getZoom();
 //						break;
-					case 'idle':
-						//Pass position and mapid to Servoy
+					case 'idle': //Used to handle zoom, tilt and bounds change 
 						bounds = object.getBounds()
-					
 						data = {
 							bounds: {sw: {lat: bounds.getSouthWest().lat(), lng: bounds.getSouthWest().lng()}, ne: {lat: bounds.getNorthEast().lat(), lng: bounds.getNorthEast().lng()}},
 							center: {lat: object.getCenter().lat(), lng: object.getCenter().lng()},
@@ -200,26 +195,16 @@ svyDataVis.gmaps = {
 					default:
 						break;
 				}
-				break; //break 'map' case
+				break
 			case 'marker':
-				switch (eventType) {
-//					case 'click': 
-//				       var infowindow = new google.maps.InfoWindow({
-//				            content: "hoi blabla"
-//				        });
-//
-//				        infowindow.open(marker.getMap(),marker);
-//						break;
-					default:
-								//Pass position and mapid to Servoy
-						data = {
-									position: {lat: object.getPosition().lat(), lng: object.getPosition().lng()},
-									mapid: object.map.svyId
-						}	
-						break;
+				if (eventType == 'dragend') { //Using dragend instead of positionChanged to prevent event firing galore
+					eventType = 'position_changed'
 				}
-				break; //break 'marker' case
 			
+				data = {
+					position: {lat: object.getPosition().lat(), lng: object.getPosition().lng()},
+				}	
+				break; 
 			case 'infoWindow':
 				//eventType is only 'closeclick' for now
 				break; //break 'infowindow' case

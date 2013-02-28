@@ -55,6 +55,51 @@ function browserCallback(objectType, id, eventType, data) {
 var allObjectCallbackHandlers = {}
 
 /**
+ * @private
+ * @constructor 
+ * 
+ * @param {*} args.source
+ * @param {String} args.type
+ * @param {Object} [args.data]
+ * @param {LatLng} [args.position]
+ * @properties={typeid:24,uuid:"56660B15-0127-4966-96D2-F30BB9343ED7"}
+ */
+function Event(args) {
+	this.data = args.data
+	
+	this.getType = function(){
+		return args.type
+	}
+	
+	this.getSource = function() {
+		return args.source
+	}
+	
+	this.getPosition = function() {
+		return args.position||null;
+	}
+	
+	this.toString = function (){
+		var props = {
+			type: this.getType()
+		}
+		if (this.getPosition()) {
+			props.position = this.getPosition().toString()
+		}
+		props.data = this.data
+		return 'Event<' + JSON.stringify(props)+ '>'
+	}
+}
+
+/**
+ * //TODO: test if this freezes all instances as well
+ * @properties={typeid:35,uuid:"B6F2BB47-C7C4-46DA-833F-95F4AF3069DE",variableType:-4}
+ */
+var eventSetup = function() {
+	Object.freeze(Event); 
+} ()
+
+/**
  * Implements https://developers.google.com/maps/documentation/javascript/reference#LatLng
  * @constructor
  * @param {Number} lat
@@ -250,7 +295,7 @@ function LatLngBounds(sw, ne){
 
 /**
  * @constructor
- * @param {Object} type
+ * @param {String} type
  *
  * @properties={typeid:24,uuid:"CC65FD0C-26F6-4932-A711-9BF5FDD62B2D"}
  */
@@ -309,12 +354,19 @@ function Marker(options) {
 		options: options
 	}
 	
-	var that = this //Storing reference to the Marker instance for usage within private functions (for example onBrowserCallback)
+	var thisInstance = this //Storing reference to the Marker instance for usage within private functions (for example onBrowserCallback)
 	
+	/**
+	 * @param {String} eventType
+	 * @param {Object} data
+	 */
 	function onBrowserCallback(eventType, data) {
+		var dataVal;
+		var position = new LatLng(data.position.lat, data.position.lng)
 		switch (eventType) {
-			case Marker.EVENT_TYPES.DRAGEND: //make sure the position is saved in the object on the servoy side
-				options.position = new LatLng(data.position.lat, data.position.lng);
+			case Marker.EVENT_TYPES.POSITION_CHANGED: 
+				dataVal = {oldValue: options.position, newValue: position}
+				options.position = position
 				break;
 			case Marker.EVENT_TYPES.CLICK:
 			case Marker.EVENT_TYPES.DBLCLICK:
@@ -324,7 +376,9 @@ function Marker(options) {
 				application.output('Unknown Marker eventType: ' + eventType)
 				return;
 		}
-		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, [that, eventType, data]);
+		
+		
+		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal, position: position}));
 		updateState()
 	}
 	
@@ -580,10 +634,6 @@ function Marker(options) {
 		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
 	}
 
-	this.addDragEndListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DRAGEND, eventHandler);
-	}
-
 	this.addPositionChangedListener = function(eventHandler) {
 		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.POSITION_CHANGED, eventHandler);
 	}
@@ -598,6 +648,17 @@ function Marker(options) {
 //		return listeners[eventType];
 //	}
 	
+	/**
+	 * @this {Marker}
+	 */
+	this.toString = function() {
+		var props = {
+			title: this.getTitle(),
+			position: this.getPosition()
+		}
+		return 'Marker<' + JSON.stringify(props)+ '>'
+	}
+	
 	allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
 }
 
@@ -610,13 +671,13 @@ var setupMarker = function(){
 		CLICK            : 'click',
 		DBLCLICK         : 'dblclick',
 	//	DRAG             : 'drag',
-		DRAGEND          : 'dragend',
+	//	DRAGEND          : 'dragend',
 	//	DRAGSTART        : 'dragstart',
 	//	MOUSEDOWN        : 'mousedown',
 	//	MOUSEOUT         : 'mouseout',
 	//	MOUSEOVER        : 'mouseover',
 	//	MOUSEUP          : 'mouseup',
-	//	POSITION_CHANGED : 'position_changed',
+		POSITION_CHANGED : 'position_changed',
 		RIGHTCLICK       : 'rightclick'
 	}
 }()
@@ -658,6 +719,10 @@ function InfoWindow(options) {
 		}
 	}
 	
+	/**
+	 * @param {String} eventType
+	 * @param {Object} data
+	 */
 	function onBrowserUpdate(eventType, data) {
 		switch (eventType) {
 			case 'closeclick':
@@ -667,7 +732,8 @@ function InfoWindow(options) {
 				application.output('Unknown InfoWindow eventType: ' + eventType)
 				return;
 		}
-		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, [this, eventType, data]);
+		
+		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, new Event({source: this, type: eventType}));
 	}
 	
 	//Public APi
@@ -869,59 +935,75 @@ function Map(container, options) {
 		return mapSetup.id;
 	}
 	
-	function onBrowserCallback(eventType, data) {
-		switch (eventType) {
-			case Map.EVENT_TYPES.CLICK:
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CLICK, [this, Map.EVENT_TYPES.CLICK, data]);
-				break; 
-			case Map.EVENT_TYPES.DBLCLICK:
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, [this, Map.EVENT_TYPES.DBLCLICK, data]);
-				break; 
-			case 'idle': //Handling majority of the events through the idle event, to prevent event firing galore
-				//bounds_changed
-				var sw = new LatLng(data.bounds.sw.lat, data.bounds.sw.lng)
-				var ne = new LatLng(data.bounds.ne.lat, data.bounds.ne.lng)
-				var newBounds = new LatLngBounds(sw,ne);
-				if (!mapSetup.options.bounds || !mapSetup.options.bounds.equals(newBounds)) {
-					mapSetup.options.bounds = newBounds;
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, [this, Map.EVENT_TYPES.BOUNDS_CHANGED, data]);
-				}
+	var thisInstance = this
 	
-				//center_changed
-				var newCenter = new LatLng(data.center.lat, data.center.lng);
-				if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
-					mapSetup.options.center = newCenter;
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, [this, Map.EVENT_TYPES.CENTER_CHANGED, data]);
-				}
-				
-				//projection_changed
-//				if (o.projection != options.projection) {
-//					
-//					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
-//				}
-				
-				//zoom_changed
-				if (data.zoom != mapSetup.options.zoom) {
-					mapSetup.options.zoom = data.zoom;
-					scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [this, Map.EVENT_TYPES.ZOOM_CHANGED, data]);
-				}
-				break;
-			case Map.EVENT_TYPES.HEADING_CHANGED:
-				mapSetup.options.heading = parseInt(data)
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, [this, Map.EVENT_TYPES.HEADING_CHANGED, data]);
-				break;
-			case Map.EVENT_TYPES.MAPTYPEID_CHANGED:
-				mapSetup.options.mapTypeId = data
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, [this, Map.EVENT_TYPES.MAPTYPEID_CHANGED, data]);
-				break;
-			case Map.EVENT_TYPES.TILT_CHANGED:
-				mapSetup.options.tilt = data
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, [this, Map.EVENT_TYPES.TILT_CHANGED, data]);
-				break;
-			default:
-				application.output('Unknown Map eventType: ' + eventType)
-				return;
+	function onBrowserCallback(eventType, data) {
+		if (eventType == 'idle') { //Handling majority of the events through the idle event, to prevent event firing galore
+			//bounds_changed
+			var sw = new LatLng(data.bounds.sw.lat, data.bounds.sw.lng)
+			var ne = new LatLng(data.bounds.ne.lat, data.bounds.ne.lng)
+			var newBounds = new LatLngBounds(sw,ne);
+			if (!mapSetup.options.bounds || !mapSetup.options.bounds.equals(newBounds)) {
+				dataVal = {oldValue: mapSetup.options.bounds, newValue: newBounds}
+				mapSetup.options.bounds = newBounds;
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+			}
+
+			//center_changed
+			var newCenter = new LatLng(data.center.lat, data.center.lng);
+			if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
+				dataVal = {oldValue: mapSetup.options.center, newValue: newCenter}
+				mapSetup.options.center = newCenter;
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+			}
+			
+			//projection_changed
+//			if (o.projection != options.projection) {
+//				
+//				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
+//			}
+			
+			//zoom_changed
+			if (data.zoom != mapSetup.options.zoom) {
+				dataVal = {oldValue: mapSetup.options.zoom, newValue: data.zoom}
+				mapSetup.options.zoom = data.zoom;
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+			}
+		} else {
+			var dataVal
+			var position
+			switch (eventType) {
+				case Map.EVENT_TYPES.CLICK: //Intentional fallthrough
+				case Map.EVENT_TYPES.DBLCLICK:
+				case Map.EVENT_TYPES.RIGHTCLICK:
+					position = new LatLng(data.position.lat, data.position.lng)
+					break; 
+				case Map.EVENT_TYPES.HEADING_CHANGED:
+					dataVal = {oldValue: mapSetup.options.heading, newValue: data}
+					mapSetup.options.heading = parseInt(data)
+					break;
+				case Map.EVENT_TYPES.MAPTYPEID_CHANGED:
+					dataVal = {oldValue: mapSetup.options.mapTypeId, newValue: data}
+					mapSetup.options.mapTypeId = data
+					break;
+				case Map.EVENT_TYPES.TILT_CHANGED:
+					dataVal = {oldValue: mapSetup.options.tilt, newValue: data}
+					mapSetup.options.tilt = data
+					break;
+				default:
+					application.output('Unknown Map eventType: ' + eventType)
+					return;
+			}
+			var eventProps = {source: thisInstance, type: eventType}
+			if (position) {
+				eventProps.position = position
+			}
+			if (dataVal) {
+				eventProps.data = dataVal
+			}
+			scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventProps));
 		}
+		
 		updateState()
 	}
 	
@@ -1183,6 +1265,13 @@ function Map(container, options) {
 	this.addProjectionChangedListener = function(eventHandler) {
 		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
 	}	
+
+	/**
+	 * @param {Function} eventHandler
+	 */
+	this.addRightClickListener = function(eventHandler) {
+		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.RIGHTCLICK, eventHandler);
+	}	
 	
 	/**
 	 * @param {Function} eventHandler
@@ -1222,7 +1311,7 @@ var setupMap = function () {
 		//MOUSEOVER: 'mouseover',
 		PROJECTION_CHANGED: 'projection_changed',
 		//RESIZE: 'resize',
-		//RIGHTCLICK: 'rightclick',
+		RIGHTCLICK: 'rightclick',
 		//TILESLOADED: 'tilesloaded',
 		TILT_CHANGED: 'tilt_changed',
 		ZOOM_CHANGED: 'zoom_changed'
