@@ -1,14 +1,17 @@
-svyDataVis.log('CHECK: Injecting MAPS api')
-
-$("document").ready(function() {
-	var script = document.createElement("script");
-	script.type = "text/javascript";
-	script.src = 'http://maps.googleapis.com/maps/api/js?v=3.9&key=AIzaSyD6A559b-KBYGBBM6mmDPcYYNpAzv_Rv1Y&sensor=false&callback=svyDataVisGMapCallback';
-	//script.src = 'http://maps.googleapis.com/maps/api/js?key=' + apiKey + '&sensor=false&callback=svyDataVisGMapCallback';
-	document.head.appendChild(script);
-});
-		
 svyDataVis.gmaps = {
+	loadApi: function(key, clientId, sensor) {
+		svyDataVis.log('Injecting API?')
+		var url = 'http://maps.googleapis.com/maps/api/js?v=3.11&callback=svyDataVisGMapCallback&sensor='
+		url += sensor ? 'true' : 'false' 
+		if (key) url += '&key=' + key
+		if (clientId) url += '&client=' + clientId
+		
+		var script = document.createElement("script");
+		script.type = "text/javascript";
+		script.src = url
+		document.head.appendChild(script);
+	},
+	
 	objects: {},
 	todos: [],
 	
@@ -56,7 +59,7 @@ svyDataVis.gmaps = {
 	},
 	
 	initialize: function() {
-		svyDataVis.log('CHECK: initialize called for GMAPS: ' + (arguments.length > 0 ? Array.prototype.slice.call(arguments).join() : ' -none-'))
+		svyDataVis.log('initialize called for GMAPS: ' + (arguments.length > 0 ? Array.prototype.slice.call(arguments).join() : ' -none-'))
 		
 		$.each(arguments, function(key, value) { //Storing the ID's to initialize in case initialize is called before the Maps API is loaded
 			svyDataVis.gmaps.todos.push(value)
@@ -69,7 +72,7 @@ svyDataVis.gmaps = {
 		//Loop through todo's as long as todo's is not empty and the previous loop managed to process one of the todo's (so the order of items in todo's and their dependencies don't matter
 		var loopProcessed = true
 		
-		var i = this.todos.length - arguments.length //Offsetting i used in for loop over this.todos to first process entries for which initialize was called specifically
+		var i = arguments.length ? this.todos.length - arguments.length : 0 //Offsetting i used in for loop over this.todos to first process entries for which initialize was called specifically
 		while (this.todos.length && loopProcessed) { 
 			loopProcessed = false
 			

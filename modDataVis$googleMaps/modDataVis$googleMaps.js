@@ -33,6 +33,16 @@ var init = function() {
 }()
 
 /**
+ * FIXME: This is a mem leak...
+ * Map holding references to the inner setup of all Objects (Maps, Markers, ...) and their onBrowserCallback method.
+ * Used by the googleMapCallback function to persists browserside updates to the map, without causing another render cycle towards the browser
+ * @private
+ * @type {Object<Function>}
+ * @properties={typeid:35,uuid:"1E3B2526-74A5-4BF3-80F7-E3D540136405",variableType:-4}
+ */
+var allObjectCallbackHandlers = {}
+
+/**
  * Generic callbackHandler for events send from the browser to the server
  * @private 
  * @properties={typeid:24,uuid:"2B8B17B3-42F6-46AA-86B1-9A8D49ABA53E"}
@@ -46,13 +56,43 @@ function browserCallback(objectType, id, eventType, data) {
 }
 
 /**
- * Map holding references to the inner setup of all Objects (Maps, Markers, ...) and their updateState method.
- * Used by the googleMapCallback function to persists browserside updates to the map, without causing another render cycle towards the browser
  * @private
- * @type {Object<Function>}
- * @properties={typeid:35,uuid:"1E3B2526-74A5-4BF3-80F7-E3D540136405",variableType:-4}
+ * @type {String}
+ *
+ * @properties={typeid:35,uuid:"AA2E7779-1CF4-4AC9-AFC0-FF86EBE4DFD8"}
  */
-var allObjectCallbackHandlers = {}
+var apiKey
+
+/**
+ * @param {String} key
+ * @properties={typeid:24,uuid:"8A906003-AC47-4C71-AF5A-48CE8F368201"}
+ */
+function setAPIKey(key) {
+	apiKey = key
+}
+
+/**
+ * @private 
+ * @type {String}
+ *
+ * @properties={typeid:35,uuid:"54070EC1-69C2-4530-896A-DA31247F99A9"}
+ */
+var apiClientId
+
+/**
+ * When using Google Maps in a non-free and non-publicly accessible environment, the Google Maps for Business version ought to be used.<br>
+ * The Google Maps for Business comes with a clientId to be included when communicating with the Maps API.<br>
+ *
+ * @see https://developers.google.com/maps/licensing
+ * @see https://developers.google.com/maps/documentation/business/clientside#MapsJS
+ *
+ * @param {String} clientId
+ * 
+ * @properties={typeid:24,uuid:"CCBB5A12-45D9-47C3-A581-4627EEFEC899"}
+ */
+function setAPIClientId(clientId) {
+	apiClientId = clientId
+}
 
 /**
  * @private
@@ -894,9 +934,10 @@ var setupinfoWindow = function(){
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
 	var dv = scopes.modDataVisualization.createVisualizationContainer(container, forms.GoogleMap)
-
+	
 	scopes.modUtils$WebClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
 	scopes.modUtils$WebClient.addJavaScriptDependancy('media:///' + callbackName, dv)
+	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(\'' + apiKey + '\',\'' + apiClientId + '\',false)')
 	
 	var mapSetup = {
 		id: dv.getId(),
