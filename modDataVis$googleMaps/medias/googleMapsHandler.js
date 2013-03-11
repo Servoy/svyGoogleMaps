@@ -1,5 +1,8 @@
 svyDataVis.gmaps = {
 	loadApi: function(key, clientId, sensor) {
+		if (document.getElementById('gmapsAPI')) {
+			return //workaround to prevent adding the Maps API multiple times
+		}
 		svyDataVis.log('Injecting API?')
 		var url = 'http://maps.googleapis.com/maps/api/js?v=3.11&callback=svyDataVisGMapCallback&sensor='
 		url += sensor ? 'true' : 'false' 
@@ -9,6 +12,7 @@ svyDataVis.gmaps = {
 		var script = document.createElement("script");
 		script.type = "text/javascript";
 		script.src = url
+		script.id = 'gmapsAPI'
 		document.head.appendChild(script);
 	},
 	
@@ -17,17 +21,17 @@ svyDataVis.gmaps = {
 	
 	createMarker: function(node) {
 		var marker = new google.maps.Marker(node.options)
-		marker.set('svyId',node.id)
+		marker.set('svyId',node.id) //TODO: is this needed? Are they read anywhere?
 		svyDataVis.gmaps.objects[node.id] = marker
 		
 		//Add event listeners
 		var events = ['click', 'dblclick', 'rightclick', 'dragend'];
 		for (var j = 0; j < events.length; j++) {
-			var handler = function(id, eventType){
+			var handler = function(objectId, mapId, eventType){
 				return function(event) {
-					svyDataVis.gmaps.callbackIntermediate("marker", id, eventType, event)
+					svyDataVis.gmaps.callbackIntermediate("marker", objectId, mapId, eventType, event)
 				}
-			}(node.id, events[j])
+			}(node.id, marker.getMap().get('svyId'), events[j])
 			google.maps.event.addListener(marker, events[j], handler);
 		}
 		return marker;
@@ -41,18 +45,18 @@ svyDataVis.gmaps = {
 	createInfoWindow: function(node) {
 		//Create infoWindow in the browser
 		var infoWindow = new google.maps.InfoWindow(node)
-		infoWindow.set('svyId',node.id)
+		infoWindow.set('svyMapId',node.mapId)
 		svyDataVis.gmaps.objects[node.id] = infoWindow
 		
 		//Add event listeners
 		var events = ['closeclick'];
 		for (var j = 0; j < events.length; j++) {
-			var handler = function(id, eventType){
+			var handler = function(objectId, mapId, eventType){
 				return function(event) {
-					svyDataVis.gmaps.callbackIntermediate("infoWindow", id, eventType, event)
-					delete svyDataVis.gmaps.objects[id] //Removing the InfoWindow now after each close
+					svyDataVis.gmaps.callbackIntermediate("infoWindow", objectId, mapId, eventType, event)
+					delete svyDataVis.gmaps.objects[objectId] //Removing the InfoWindow now after each close
 				}
-			}(node.id, events[j])
+			}(node.id, node.mapId, events[j])
 			google.maps.event.addListener(infoWindow, events[j], handler);
 		}
 		return infoWindow;
@@ -93,7 +97,7 @@ svyDataVis.gmaps = {
 					case "map":
 						//Create new Map in the browser
 						var map = new google.maps.Map(document.getElementById(node.id), node.options)
-						map.set('svyId',node.id)
+						map.set('svyId',node.id) //Used by Markers to retrieve the ID of the Map their on
 						svyDataVis.gmaps.objects[node.id] = map
 						
 						//Add event listeners
@@ -113,7 +117,7 @@ svyDataVis.gmaps = {
 						for (var j = 0; j < events.length; j++) {
 							var handler = function(id, eventType){
 								return function(event) {
-									svyDataVis.gmaps.callbackIntermediate("map", id, eventType, event)
+									svyDataVis.gmaps.callbackIntermediate("map", id, id, eventType, event)
 								}
 							}(node.id, events[j])
 							google.maps.event.addListener(map, events[j], handler);
@@ -154,11 +158,11 @@ svyDataVis.gmaps = {
 		}
 	},
 	
-	callbackIntermediate: function(objectType, id, eventType, event) {
+	callbackIntermediate: function(objectType, objectId, mapId, eventType, event) {
 		//Intermediate function to retrieve relevant data when events occur on a map/marker/infoWindow and then send them to the server
 		var data = null;
 		//svyDataVis.log("CALLBACKINTERMEDIATE: " + objectType + ", " +  id + ", " +  eventType + ", " +  event);
-		var object = svyDataVis.gmaps.objects[id];
+		var object = svyDataVis.gmaps.objects[objectId];
 		switch (objectType) {
 			case 'map': 
 				//TODO: the heading/tilt_changed events ought to be throttled
@@ -213,7 +217,7 @@ svyDataVis.gmaps = {
 				break; //break 'infowindow' case
 		}
 		//Call the mapsEventHandler that will call the Servoy callback
-		this.mapsEventHandler(objectType, id, eventType, JSON.stringify(data))
+		this.mapsEventHandler(objectType, objectId, mapId, eventType, JSON.stringify(data))
 	}
 }
 	

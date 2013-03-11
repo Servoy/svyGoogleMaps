@@ -26,32 +26,25 @@ var callbackName = 'googleMapsHandlerCallback.js'
  * @properties={typeid:35,uuid:"C88DB00A-27F8-4CAB-A8FB-C1D2D50FC5C4",variableType:-4}
  */
 var init = function() {
-	var callback = plugins.WebClientUtils.generateCallbackScript(browserCallback,['objectType', 'id', 'eventType', 'data'], false);
-	var script = 'svyDataVis.gmaps.mapsEventHandler = function(objectType, id, eventType, data){' + callback + '}';
+	var callback = plugins.WebClientUtils.generateCallbackScript(browserCallback,['objectType', 'objectId', 'mapId', 'eventType', 'data'], false);
+	var script = 'svyDataVis.gmaps.mapsEventHandler = function(objectType, objectId, mapId, eventType, data){' + callback + '}';
 	var bytes = new Packages.java.lang.String(script).getBytes('UTF-8')
 	solutionModel.newMedia(callbackName, bytes)
 }()
-
-/**
- * FIXME: This is a mem leak...
- * Map holding references to the inner setup of all Objects (Maps, Markers, ...) and their onBrowserCallback method.
- * Used by the googleMapCallback function to persists browserside updates to the map, without causing another render cycle towards the browser
- * @private
- * @type {Object<Function>}
- * @properties={typeid:35,uuid:"1E3B2526-74A5-4BF3-80F7-E3D540136405",variableType:-4}
- */
-var allObjectCallbackHandlers = {}
 
 /**
  * Generic callbackHandler for events send from the browser to the server
  * @private 
  * @properties={typeid:24,uuid:"2B8B17B3-42F6-46AA-86B1-9A8D49ABA53E"}
  */
-function browserCallback(objectType, id, eventType, data) {
-	if (allObjectCallbackHandlers[id]) {
-		allObjectCallbackHandlers[id](eventType, JSON.parse(data))
+function browserCallback(objectType, objectId, mapId, eventType, data) {
+	if (!mapId in forms) {
+		application.output('Callback for unknown DataVisualization:  id=' + mapId)
+	}
+	if (forms[mapId].allObjectCallbackHandlers[objectId]) {
+		forms[mapId].allObjectCallbackHandlers[objectId](eventType, JSON.parse(data))
 	} else {
-		application.output('Callback for unknown object: type=' + objectType + ', id=' + id + ', eventType=' + eventType)
+		application.output('Callback for unknown object: type=' + objectType + ', id=' + objectId + ', eventType=' + eventType)
 	}
 }
 
@@ -64,6 +57,8 @@ function browserCallback(objectType, id, eventType, data) {
 var apiKey
 
 /**
+ * Note: an API key is not required, but is advised to use: https://developers.google.com/maps/documentation/javascript/tutorial#api_key
+ * 
  * @param {String} key
  * @properties={typeid:24,uuid:"8A906003-AC47-4C71-AF5A-48CE8F368201"}
  */
@@ -95,6 +90,7 @@ function setAPIClientId(clientId) {
 }
 
 /**
+ * TODO: externalize base Event to scopes.modUtils$eventManager and inherit from it
  * @private
  * @constructor 
  * 
@@ -106,7 +102,7 @@ function setAPIClientId(clientId) {
  */
 function Event(args) {
 	this.data = args.data
-	
+
 	this.getType = function(){
 		return args.type
 	}
@@ -127,7 +123,7 @@ function Event(args) {
 			props.position = this.getPosition().toString()
 		}
 		props.data = this.data
-		return 'Event<' + JSON.stringify(props)+ '>'
+		return 'Event(' + JSON.stringify(props).slice(1,-1) + ')'
 	}
 }
 
@@ -402,7 +398,7 @@ function Marker(options) {
 	 */
 	function onBrowserCallback(eventType, data) {
 		var dataVal;
-		var position = new LatLng(data.position.lat, data.position.lng)
+		var position = new LatLng(data['position'].lat, data['position'].lng)
 		switch (eventType) {
 			case Marker.EVENT_TYPES.POSITION_CHANGED: 
 				dataVal = {oldValue: options.position, newValue: position}
@@ -421,7 +417,7 @@ function Marker(options) {
 		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal, position: position}));
 		updateState()
 	}
-	
+		
 	/**
 	 * @param {String} [methodName]
 	 * @param {Array} [args]
@@ -545,11 +541,14 @@ function Marker(options) {
 			return
 		}
 		if (options.map != null) { 
-			options.map.removeMarker(markerSetup.id)
+			//TODO: make APi to add/remove subtypes
+			forms[options.map.getId()].desistObject(markerSetup.id)
 			options.map = null
+			plugins.WebClientUtils.executeClientSideJS("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
 		}
 		if (map) {
 			options.map = map
+			forms[map.getId()].allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
 			updateState('setMap' ,[markerSetup.options.map])	
 		}
 	}
@@ -698,8 +697,6 @@ function Marker(options) {
 		}
 		return 'Marker<' + JSON.stringify(props)+ '>'
 	}
-	
-	allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
 }
 
 /**
@@ -743,6 +740,7 @@ function InfoWindow(options) {
 	var isShowing = false
 	var infoWindowSetup = {
 		id: application.getUUID().toString(),
+		mapId: null,
 		type: "infoWindow",
 		options: options
 	}
@@ -763,7 +761,7 @@ function InfoWindow(options) {
 	 * @param {String} eventType
 	 * @param {Object} data
 	 */
-	function onBrowserUpdate(eventType, data) {
+	function onBrowserCallback(eventType, data) {
 		switch (eventType) {
 			case 'closeclick':
 				isShowing = false
@@ -776,9 +774,6 @@ function InfoWindow(options) {
 		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, new Event({source: this, type: eventType}));
 	}
 	
-	//Public APi
-	//TODO: add missing getter/setters
-	//TODO: add updateState to setters
 	/**
 	 * @return {String}
 	 */
@@ -832,8 +827,10 @@ function InfoWindow(options) {
 	 * @this {InfoWindow}
 	 */
 	this.open = function(mp, mkr) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
-		if (!mp) { 
-			return
+		if (!mp) {
+			throw scopes.modUtils$exceptions.IllegalArgumentException('Map (mp) argument cannot be null')
+		} else if (!(mp instanceof Map)) {
+			throw scopes.modUtils$exceptions.IllegalArgumentException('Map (mp) argument must be of type Map')			
 		}
 		if (mkr) {
 			if (mp != mkr.getMap()) {
@@ -842,6 +839,10 @@ function InfoWindow(options) {
 		} else if (!this.getPosition()) {
 			application.output('Either a Position must be set or an anchor supplied in order to open a Infowindow' , LOGGINGLEVEL.WARNING)
 		}
+		
+		infoWindowSetup.mapId = mp.getId()
+		forms[mp.getId()].allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserCallback
+		
 		
 		isShowing = true
 		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
@@ -854,9 +855,11 @@ function InfoWindow(options) {
 	 * Closes this InfoWindow
 	 */
 	this.close = function() {
+		delete forms[infoWindowSetup.mapId].allObjectCallbackHandlers[infoWindowSetup.id]
+		infoWindowSetup.mapId = null
 		isShowing = false
 		//TODO: test
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];')
+		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
@@ -869,8 +872,6 @@ function InfoWindow(options) {
 //	this.setOptions = function(opts) {
 //		options = opts;
 //	}
-	
-	allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserUpdate
 }
 
 /**
@@ -892,7 +893,7 @@ var setupinfoWindow = function(){
  * 
  * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
  * TODO: Impl. missing Types used in options
- * TODO: setting Projecttion and related events: make sense to have?
+ * TODO: setting Projection and related events: make sense to have?
  * @constructor 
  * 
  * @param {RuntimeTabPanel} container the panel in which the visualization is displayed. Note: all existing tabs in the panel will be removed
@@ -937,23 +938,13 @@ function Map(container, options) {
 	
 	scopes.modUtils$WebClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
 	scopes.modUtils$WebClient.addJavaScriptDependancy('media:///' + callbackName, dv)
-	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(\'' + apiKey + '\',\'' + apiClientId + '\',false)')
+	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
+	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 	
 	var mapSetup = {
 		id: dv.getId(),
 		type: "map",
 		options: options
-	}
-	dv = null
-	
-	/**
-	 * Internal API, DO NOT CALL
-	 * @param {String} id
-	 */
-	this.removeMarker = function (id) {
-		forms[mapSetup.id].desistObject(id)
-		updateState();
-		plugins.WebClientUtils.executeClientSideJS("svyDataVis.gmaps.removeMarker('"+id+"')")
 	}
 	
 	/**
@@ -984,9 +975,9 @@ function Map(container, options) {
 			var sw = new LatLng(data.bounds.sw.lat, data.bounds.sw.lng)
 			var ne = new LatLng(data.bounds.ne.lat, data.bounds.ne.lng)
 			var newBounds = new LatLngBounds(sw,ne);
-			if (!mapSetup.options.bounds || !mapSetup.options.bounds.equals(newBounds)) {
-				dataVal = {oldValue: mapSetup.options.bounds, newValue: newBounds}
-				mapSetup.options.bounds = newBounds;
+			if (!mapSetup.options['bounds'] || !mapSetup.options['bounds'].equals(newBounds)) {
+				dataVal = {oldValue: mapSetup.options['bounds'], newValue: newBounds}
+				mapSetup.options['bounds'] = newBounds;
 				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
 			}
 
@@ -1048,6 +1039,9 @@ function Map(container, options) {
 		updateState()
 	}
 	
+	dv.allObjectCallbackHandlers[mapSetup.id] = onBrowserCallback
+	dv = null
+		
 	/**
 	 * @param {String} [methodName]
 	 * @param {Array} [args]
@@ -1096,7 +1090,9 @@ function Map(container, options) {
 	 * @return {LatLngBounds}
 	 */
 	this.getBounds = function() {
-		return mapSetup.options['bounds']
+		/** @type {LatLngBounds} */
+		var bounds = mapSetup.options['bounds']
+		return bounds
 	}
 
 	
@@ -1326,9 +1322,7 @@ function Map(container, options) {
 	 */
 	this.addZoomChangedListener = function(eventHandler) {
 		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
-	}	
-	
-	allObjectCallbackHandlers[mapSetup.id] = onBrowserCallback
+	}
 }
 
 /**
