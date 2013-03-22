@@ -891,9 +891,6 @@ var setupinfoWindow = function(){
 /**
  * Google Map impl.
  * 
- * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
- * TODO: Impl. missing Types used in options
- * TODO: setting Projection and related events: make sense to have?
  * @constructor 
  * 
  * @param {RuntimeTabPanel} container the panel in which the visualization is displayed. Note: all existing tabs in the panel will be removed
@@ -908,29 +905,43 @@ var setupinfoWindow = function(){
  * @param {Boolean} [options.keyboardShortcuts]
  * @param {Boolean} [options.mapMaker]
  * @param {Boolean} [options.mapTypeControl]
- * TODO @param {MapTypeControlOptions} [options.mapTypeControlOptions]
  * @param {MapTypeId} options.mapTypeId
  * @param {Number} [options.maxZoom]
  * @param {Number} [options.minZoom]
  * @param {Boolean} [options.noClear]
  * @param {Boolean} [options.overviewMapControl]
- * TODO @param {OverviewMapControlOptions} [options.overviewMapControlOptions]
  * @param {Boolean} [options.panControl]
- * TODO @param {PanControlOptions} [options.panControlOptions]
  * @param {Boolean} [options.rotateControl]
- * TODO @param {RotateControlOptions} [options.rotateControlOptions]
  * @param {Boolean} [options.scaleControl]
- * TODO @param {ScaleControlOptions} [options.scaleControlOptions]
  * @param {Boolean} [options.scrollwheel]
- * TODO @param {StreetViewPanorama} [options.streetView]
  * @param {Boolean} [options.streetViewControl]
- * TODO @param {StreetViewControlOptions} [options.streetViewControlOptions]
- * TODO @param {Array<MapTypeStyle>} [options.styles]
  * @param {Number} [options.tilt]
  * @param {Number} options.zoom
  * @param {Boolean} [options.zoomControl]
- * TODO @param {ZoomControlOptions} [options.zoomControlOptions] 
+ * 
  * @properties={typeid:24,uuid:"1E5BE0D4-5E7A-489D-AACA-7BECA54B2CD1"}
+ */
+/*
+ * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
+ * TODO: Impl. missing Types used in options
+ * TODO: setting Projection and related events: make sense to have?
+ * 
+ * TODO param {MapTypeControlOptions} [options.mapTypeControlOptions]
+ * TODO param {OverviewMapControlOptions} [options.overviewMapControlOptions]
+ * TODO param {PanControlOptions} [options.panControlOptions]
+ * TODO param {RotateControlOptions} [options.rotateControlOptions]
+ * TODO param {ScaleControlOptions} [options.scaleControlOptions]
+ * TODO param {StreetViewPanorama} [options.streetView]
+ * TODO param {StreetViewControlOptions} [options.streetViewControlOptions]
+ * TODO param {Array<MapTypeStyle>} [options.styles]
+ * TODO param {ZoomControlOptions} [options.zoomControlOptions] 
+ */
+/**
+ * TODO generated, please specify type and doc for the params
+ * @param container
+ * @param options
+ *
+ * @properties={typeid:24,uuid:"81D2B830-7A76-4BD1-8963-A4FACB1934FE"}
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
