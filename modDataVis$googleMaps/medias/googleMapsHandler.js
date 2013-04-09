@@ -217,7 +217,7 @@ svyDataVis.gmaps = {
 				break; //break 'infowindow' case
 		}
 		//Call the mapsEventHandler that will call the Servoy callback
-		this.mapsEventHandler(objectType, objectId, mapId, eventType, JSON.stringify(data))
+		svyDataVis.callbackHandler(objectType, objectId, mapId, eventType, JSON.stringify(data))
 	}
 }
 	

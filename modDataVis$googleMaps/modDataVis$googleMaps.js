@@ -11,44 +11,6 @@
  */
 
 /**
- * @type {String}
- *
- * @properties={typeid:35,uuid:"A0F61436-6581-4BD0-9E0F-A842B5EBCA9D"}
- */
-var callbackName = 'googleMapsHandlerCallback.js'
-
-/**
- * Variable with self executing function as value to run some initialization code when the scope gets instantiated on solution start.
- * - Dynamically created an .js entry in the Media Lib and includes it in the Web CLient 
- * - Sets up several .toObjectPresentation prototypes on constructors, needed for serialization of objects to browser side
- * @private
- * @SuppressWarnings(unused)
- * @properties={typeid:35,uuid:"C88DB00A-27F8-4CAB-A8FB-C1D2D50FC5C4",variableType:-4}
- */
-var init = function() {
-	var callback = plugins.WebClientUtils.generateCallbackScript(browserCallback,['objectType', 'objectId', 'mapId', 'eventType', 'data'], false);
-	var script = 'svyDataVis.gmaps.mapsEventHandler = function(objectType, objectId, mapId, eventType, data){' + callback + '}';
-	var bytes = new Packages.java.lang.String(script).getBytes('UTF-8')
-	solutionModel.newMedia(callbackName, bytes)
-}()
-
-/**
- * Generic callbackHandler for events send from the browser to the server
- * @private 
- * @properties={typeid:24,uuid:"2B8B17B3-42F6-46AA-86B1-9A8D49ABA53E"}
- */
-function browserCallback(objectType, objectId, mapId, eventType, data) {
-	if (!mapId in forms) {
-		application.output('Callback for unknown DataVisualization:  id=' + mapId)
-	}
-	if (forms[mapId].allObjectCallbackHandlers[objectId]) {
-		forms[mapId].allObjectCallbackHandlers[objectId](eventType, JSON.parse(data))
-	} else {
-		application.output('Callback for unknown object: type=' + objectType + ', id=' + objectId + ', eventType=' + eventType)
-	}
-}
-
-/**
  * @private
  * @type {String}
  *
@@ -123,7 +85,7 @@ function Event(args) {
 			props.position = this.getPosition().toString()
 		}
 		props.data = this.data
-		return 'Event(' + JSON.stringify(props).slice(1,-1) + ')'
+		return 'Event(' + JSON.stringify(props).slice(1,-1) + ')' //TODO: sync toString implementation betwene different events
 	}
 }
 
@@ -440,7 +402,7 @@ function Marker(options) {
 					})
 					
 					code += ');'
-					plugins.WebClientUtils.executeClientSideJS(code)
+					scopes.modUtils$WebClient.executeClientsideScript(code)
 				}
 			} else {
 				application.output('Invalid DataVisualizer reference') //TODO: better error messages
@@ -544,7 +506,7 @@ function Marker(options) {
 			//TODO: make APi to add/remove subtypes
 			forms[options.map.getId()].desistObject(markerSetup.id)
 			options.map = null
-			plugins.WebClientUtils.executeClientSideJS("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
+			scopes.modUtils$WebClient.executeClientsideScript("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
 		}
 		if (map) {
 			options.map = map
@@ -787,7 +749,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setCOntent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setCOntent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -845,10 +807,10 @@ function InfoWindow(options) {
 		
 		
 		isShowing = true
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyDataVis', 'gmaps', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
 		var tmp = application.getUUID().toString()
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
+		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
@@ -859,7 +821,7 @@ function InfoWindow(options) {
 		infoWindowSetup.mapId = null
 		isShowing = false
 		//TODO: test
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
+		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.gmaps.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
@@ -948,7 +910,6 @@ function Map(container, options) {
 	var dv = scopes.modDataVisualization.createVisualizationContainer(container, forms.GoogleMap)
 	
 	scopes.modUtils$WebClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
-	scopes.modUtils$WebClient.addJavaScriptDependancy('media:///' + callbackName, dv)
 	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
 	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 	
@@ -1074,7 +1035,7 @@ function Map(container, options) {
 					})
 					
 					code += ');'
-					plugins.WebClientUtils.executeClientSideJS(code)
+					scopes.modUtils$WebClient.executeClientsideScript(code)
 				}
 		} else {
 			application.output('Invalid DataVisualizer reference') //TODO: better error messages
@@ -1178,7 +1139,7 @@ function Map(container, options) {
 	 */
 	this.panBy = function(x, y) {
 		//No state update, because no way to determine the new center. State will be updated async
-		plugins.WebClientUtils.executeClientSideJS('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
+		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
 	}
 
 	/**
@@ -1200,7 +1161,7 @@ function Map(container, options) {
 	 */
 	this.panToBounds = function(bounds){
 		//CHEKCME: why using WCUtils plugin here and not update state?
-		plugins.WebClientUtils.executeClientSideJS('var bounds = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyDataVis.JSON2Object();svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		scopes.modUtils$WebClient.executeClientsideScript('var bounds = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyDataVis.JSON2Object();svyDataVis.gmaps.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**
