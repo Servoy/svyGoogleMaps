@@ -52,40 +52,21 @@ function setAPIClientId(clientId) {
 }
 
 /**
- * TODO: externalize base Event to scopes.modUtils$eventManager and inherit from it
  * @private
  * @constructor 
+ * @extends {scopes.modUtils$eventManager.Event}
  * 
- * @param {*} args.source
- * @param {String} args.type
- * @param {Object} [args.data]
- * @param {LatLng} [args.position]
+ * @param {String} type
+ * @param {*} source
+ * @param {Object} [data]
+ * @param {LatLng} [position]
  * @properties={typeid:24,uuid:"56660B15-0127-4966-96D2-F30BB9343ED7"}
  */
-function Event(args) {
-	this.data = args.data
-
-	this.getType = function(){
-		return args.type
-	}
-	
-	this.getSource = function() {
-		return args.source
-	}
+function Event(type, source, position, data) {
+	scopes.modUtils$eventManager.Event.call(this, type, source, data);
 	
 	this.getPosition = function() {
-		return args.position||null;
-	}
-	
-	this.toString = function (){
-		var props = {
-			type: this.getType()
-		}
-		if (this.getPosition()) {
-			props.position = this.getPosition().toString()
-		}
-		props.data = this.data
-		return 'Event(' + JSON.stringify(props).slice(1,-1) + ')' //TODO: sync toString implementation betwene different events
+		return position||null;
 	}
 }
 
@@ -94,6 +75,7 @@ function Event(args) {
  * @properties={typeid:35,uuid:"B6F2BB47-C7C4-46DA-833F-95F4AF3069DE",variableType:-4}
  */
 var eventSetup = function() {
+	Event.prototype = Object.create(scopes.modUtils$eventManager.Event.prototype);
 	Object.freeze(Event); 
 } ()
 
@@ -376,7 +358,7 @@ function Marker(options) {
 		}
 		
 		
-		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal, position: position}));
+		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
 		updateState()
 	}
 		
@@ -423,6 +405,9 @@ function Marker(options) {
 	}
 	
 	updateState();
+	if (options.map) {
+		forms[options.map.getId()].allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
+	}
 
 	/**
 	 * Internal API, DO NOT CALL
@@ -707,6 +692,8 @@ function InfoWindow(options) {
 		options: options
 	}
 	
+	var thisInstance = this //Storing reference to the Marker instance for usage within private functions (for example onBrowserCallback)
+	
 	/**
 	 * Internal API: DO NOT CALL
 	 * @return {Object}
@@ -733,7 +720,7 @@ function InfoWindow(options) {
 				return;
 		}
 		
-		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, new Event({source: this, type: eventType}));
+		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, new Event(eventType, thisInstance));
 	}
 	
 	/**
@@ -950,7 +937,7 @@ function Map(container, options) {
 			if (!mapSetup.options['bounds'] || !mapSetup.options['bounds'].equals(newBounds)) {
 				dataVal = {oldValue: mapSetup.options['bounds'], newValue: newBounds}
 				mapSetup.options['bounds'] = newBounds;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, data));
 			}
 
 			//center_changed
@@ -958,7 +945,7 @@ function Map(container, options) {
 			if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
 				dataVal = {oldValue: mapSetup.options.center, newValue: newCenter}
 				mapSetup.options.center = newCenter;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
 			}
 			
 			//projection_changed
@@ -971,7 +958,7 @@ function Map(container, options) {
 			if (data.zoom != mapSetup.options.zoom) {
 				dataVal = {oldValue: mapSetup.options.zoom, newValue: data.zoom}
 				mapSetup.options.zoom = data.zoom;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event({source: thisInstance, type: eventType, data: dataVal}));
+				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
 			}
 		} else {
 			var dataVal
@@ -998,14 +985,7 @@ function Map(container, options) {
 					application.output('Unknown Map eventType: ' + eventType)
 					return;
 			}
-			var eventProps = {source: thisInstance, type: eventType}
-			if (position) {
-				eventProps.position = position
-			}
-			if (dataVal) {
-				eventProps.data = dataVal
-			}
-			scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventProps));
+			scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
 		}
 		
 		updateState()
