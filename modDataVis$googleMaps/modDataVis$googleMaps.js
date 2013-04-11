@@ -311,12 +311,12 @@ var MapTypeIds = {
  * @param {Boolean} [options.visible] If true, the marker is visible
  * @param {Number} [options.zIndex] All markers are displayed on the map in order of their zIndex, with higher values displaying in front of markers with lower values. By default, markers are displayed according to their vertical position on screen, with lower markers appearing in front of markers further up the screen.
  * 
- * TODO		anchorPoint
- * TODO		icon: |MarkerImage|Symbol=,
- * TODO		shadow: |MarkerImage|Symbol=,
- * TODO		shape: MarkerShape=,
- * TODO 	map:Map|StreetViewPanorama,
- * TODO		animation: Animation=,
+ * TODO	param anchorPoint
+ * TODO	param icon: |MarkerImage|Symbol=,
+ * TODO	param shadow: |MarkerImage|Symbol=,
+ * TODO	param shape: MarkerShape=,
+ * TODO	param map:Map|StreetViewPanorama,
+ * TODO	param animation: Animation=,
  * 
  * @properties={typeid:24,uuid:"15AF5C80-3814-47FF-B34B-7D9D40E82FBF"}
  */
@@ -613,11 +613,13 @@ function Marker(options) {
 		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.RIGHTCLICK, eventHandler);
 	}
 
-	//TODO: removeListener
-//	
-//	this.getEventHandler = function(eventType) {
-//		return listeners[eventType];
-//	}
+	/**
+	 * @param {String} type See scopes.modDataVis$googleMaps.Marker.EVENT_TYPES
+	 * @param eventHandler
+	 */
+	this.removeListener = function(type, eventHandler) {
+		scopes.modUtils$eventManager.removeListener(markerSetup.id, type, eventHandler);
+	}
 	
 	/**
 	 * @this {Marker}
@@ -800,6 +802,14 @@ function InfoWindow(options) {
 	
 	this.addOnCLoseListener = function(eventHandler) {
 		scopes.modUtils$eventManager.addListener(infoWindowSetup.id, InfoWindow.EVENT_TYPES.CLOSECLICK, eventHandler);
+	}
+	
+	/**
+	 * @param {String} type See scopes.modDataVis$googleMaps.InfoWindow.EVENT_TYPES
+	 * @param eventHandler
+	 */
+	this.removeListener = function(type, eventHandler) {
+		scopes.modUtils$eventManager.removeListener(infoWindowSetup.id, type, eventHandler);
 	}
 
 //	/**
@@ -1253,6 +1263,14 @@ function Map(container, options) {
 	 */
 	this.addZoomChangedListener = function(eventHandler) {
 		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
+	}
+	
+	/**
+	 * @param {String} type See scopes.modDataVis$googleMaps.Map.EVENT_TYPES
+	 * @param eventHandler
+	 */
+	this.removeListener = function(type, eventHandler) {
+		scopes.modUtils$eventManager.removeListener(mapSetup.id, type, eventHandler);
 	}
 }
 
