@@ -277,7 +277,6 @@ function MapTypeId(type) {
 		return { svySpecial: true, type: 'reference', parts: ['google', 'maps', 'MapTypeId', this.type] }
 	}
 	this.type = type
-	
 }
 
 /**
@@ -887,7 +886,7 @@ function Map(container, options) {
 	
 	scopes.modUtils$WebClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
 	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
-	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
 	
 	var mapSetup = {
 		id: dv.getId(),
