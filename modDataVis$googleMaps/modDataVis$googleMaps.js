@@ -1,13 +1,6 @@
 /*
  * Google Maps APIv3.9 implementation: https://developers.google.com/maps/documentation/javascript/reference
- * 
- * TODO: Implement mechanism to sync scripting updates to browser
- * TODO: Implement API of Marker & Maps
- * TODO: Marker instance lookups
- * TODO: Event firing
- * TODO: implement InfoWindow
  * TODO: implement PolyLine
- * TODO: add JSON polyfill for older browsers
  */
 
 /**
@@ -387,7 +380,7 @@ function Marker(options) {
 					scopes.modUtils$WebClient.executeClientsideScript(code)
 				}
 			} else {
-				application.output('Invalid DataVisualizer reference') //TODO: better error messages
+				application.output('Trying to update a non-existing DataVisualization instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
 			}
 		}
 	}
@@ -407,14 +400,6 @@ function Marker(options) {
 	updateState();
 	if (options.map) {
 		forms[options.map.getId()].allObjectCallbackHandlers[markerSetup.id] = onBrowserCallback
-	}
-
-	/**
-	 * Internal API, DO NOT CALL
-	 * @return {String}
-	 */
-	this.getId = function() {
-		return markerSetup.id;
 	}
 	
 //	//Constants
@@ -736,7 +721,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setCOntent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps.objects[\'' + infoWindowSetup.id + '\'].setContent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -775,7 +760,9 @@ function InfoWindow(options) {
 	 * @param {Marker} [mkr] anchor to which the InforWidnow should be linked
 	 * @this {InfoWindow}
 	 */
-	this.open = function(mp, mkr) { //TODO: handle the scenario where a InfoWindow is re-opened on another Map
+	this.open = function(mp, mkr) { 
+		//TODO: handle the scenario where a InfoWindow is re-opened on another Map
+		//TODO: should we handle opening the InfoWindow if already open?
 		if (!mp) {
 			throw scopes.modUtils$exceptions.IllegalArgumentException('Map (mp) argument cannot be null')
 		} else if (!(mp instanceof Map)) {
@@ -837,6 +824,20 @@ var setupinfoWindow = function(){
 	}
 }()
 
+/* TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
+ * TODO: Impl. missing Types used in options
+ * TODO: setting Projection and related events: make sense to have?
+ * 
+ * TODO param {MapTypeControlOptions} [options.mapTypeControlOptions]
+ * TODO param {OverviewMapControlOptions} [options.overviewMapControlOptions]
+ * TODO param {PanControlOptions} [options.panControlOptions]
+ * TODO param {RotateControlOptions} [options.rotateControlOptions]
+ * TODO param {ScaleControlOptions} [options.scaleControlOptions]
+ * TODO param {StreetViewPanorama} [options.streetView]
+ * TODO param {StreetViewControlOptions} [options.streetViewControlOptions]
+ * TODO param {Array<MapTypeStyle>} [options.styles]
+ * TODO param {ZoomControlOptions} [options.zoomControlOptions] 
+ */
 /**
  * Google Map impl.
  * 
@@ -869,28 +870,6 @@ var setupinfoWindow = function(){
  * @param {Boolean} [options.zoomControl]
  * 
  * @properties={typeid:24,uuid:"1E5BE0D4-5E7A-489D-AACA-7BECA54B2CD1"}
- */
-/*
- * TODO: persist switching to streetview: http://stackoverflow.com/questions/7251738/detecting-google-maps-streetview-mode && http://stackoverflow.com/questions/6529459/implement-google-maps-v3-street-view
- * TODO: Impl. missing Types used in options
- * TODO: setting Projection and related events: make sense to have?
- * 
- * TODO param {MapTypeControlOptions} [options.mapTypeControlOptions]
- * TODO param {OverviewMapControlOptions} [options.overviewMapControlOptions]
- * TODO param {PanControlOptions} [options.panControlOptions]
- * TODO param {RotateControlOptions} [options.rotateControlOptions]
- * TODO param {ScaleControlOptions} [options.scaleControlOptions]
- * TODO param {StreetViewPanorama} [options.streetView]
- * TODO param {StreetViewControlOptions} [options.streetViewControlOptions]
- * TODO param {Array<MapTypeStyle>} [options.styles]
- * TODO param {ZoomControlOptions} [options.zoomControlOptions] 
- */
-/**
- * TODO generated, please specify type and doc for the params
- * @param container
- * @param options
- *
- * @properties={typeid:24,uuid:"81D2B830-7A76-4BD1-8963-A4FACB1934FE"}
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
@@ -1018,7 +997,7 @@ function Map(container, options) {
 					scopes.modUtils$WebClient.executeClientsideScript(code)
 				}
 		} else {
-			application.output('Invalid DataVisualizer reference') //TODO: better error messages
+			application.output('Trying to update a non-existing DataVisualization instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
 		}
 	}
 	
