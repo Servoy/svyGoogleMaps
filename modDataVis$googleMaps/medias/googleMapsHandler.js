@@ -16,13 +16,12 @@ svyDataVis.gmaps = {
 		document.head.appendChild(script);
 	},
 	
-	objects: {},
 	todos: [],
 	
 	createMarker: function(node) {
 		var marker = new google.maps.Marker(node.options)
 		marker.set('svyId',node.id) //TODO: is this needed? Are they read anywhere?
-		svyDataVis.gmaps.objects[node.id] = marker
+		svyDataVis.objects[node.id] = marker
 		
 		//Add event listeners
 		var events = ['click', 'dblclick', 'rightclick', 'dragend'];
@@ -38,15 +37,15 @@ svyDataVis.gmaps = {
 	},
 	
 	removeMarker: function(id) {
-		svyDataVis.gmaps.objects[id].setMap(null);
-		delete svyDataVis.gmaps.objects[id]
+		svyDataVis.objects[id].setMap(null);
+		delete svyDataVis.objects[id]
 	},
 	
 	createInfoWindow: function(node) {
 		//Create infoWindow in the browser
 		var infoWindow = new google.maps.InfoWindow(node)
 		infoWindow.set('svyMapId',node.mapId)
-		svyDataVis.gmaps.objects[node.id] = infoWindow
+		svyDataVis.objects[node.id] = infoWindow
 		
 		//Add event listeners
 		var events = ['closeclick'];
@@ -54,7 +53,7 @@ svyDataVis.gmaps = {
 			var handler = function(objectId, mapId, eventType){
 				return function(event) {
 					svyDataVis.gmaps.callbackIntermediate("infoWindow", objectId, mapId, eventType, event)
-					delete svyDataVis.gmaps.objects[objectId] //Removing the InfoWindow now after each close
+					delete svyDataVis.objects[objectId] //Removing the InfoWindow now after each close
 				}
 			}(node.id, node.mapId, events[j])
 			google.maps.event.addListener(infoWindow, events[j], handler);
@@ -98,7 +97,7 @@ svyDataVis.gmaps = {
 						//Create new Map in the browser
 						var map = new google.maps.Map(document.getElementById(node.id), node.options)
 						map.set('svyId',node.id) //Used by Markers to retrieve the ID of the Map their on
-						svyDataVis.gmaps.objects[node.id] = map
+						svyDataVis.objects[node.id] = map
 						
 						//Add event listeners
 						var events = [
@@ -162,7 +161,7 @@ svyDataVis.gmaps = {
 		//Intermediate function to retrieve relevant data when events occur on a map/marker/infoWindow and then send them to the server
 		var data = null;
 		//svyDataVis.log("CALLBACKINTERMEDIATE: " + objectType + ", " +  id + ", " +  eventType + ", " +  event);
-		var object = svyDataVis.gmaps.objects[objectId];
+		var object = svyDataVis.objects[objectId];
 		switch (objectType) {
 			case 'map': 
 				//TODO: the heading/tilt_changed events ought to be throttled
