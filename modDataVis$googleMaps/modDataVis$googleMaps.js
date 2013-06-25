@@ -376,7 +376,7 @@ function Marker(options) {
 					})
 					
 					code += ');'
-					scopes.modUtils$WebClient.executeClientsideScript(code)
+					scopes.modUtils$webClient.executeClientsideScript(code)
 				}
 			} else {
 				application.output('Trying to update a non-existing DataVisualization instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
@@ -475,7 +475,7 @@ function Marker(options) {
 			//TODO: make APi to add/remove subtypes
 			forms[options.map.getId()].desistObject(markerSetup.id)
 			options.map = null
-			scopes.modUtils$WebClient.executeClientsideScript("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
+			scopes.modUtils$webClient.executeClientsideScript("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
 		}
 		if (map) {
 			options.map = map
@@ -722,7 +722,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.objects[\'' + infoWindowSetup.id + '\'].setContent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			scopes.modUtils$webClient.executeClientsideScript('svyDataVis.objects[\'' + infoWindowSetup.id + '\'].setContent(svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -782,10 +782,10 @@ function InfoWindow(options) {
 		
 		
 		isShowing = true
-		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyDataVis', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
 		var tmp = application.getUUID().toString()
-		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
+		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
@@ -796,7 +796,7 @@ function InfoWindow(options) {
 		infoWindowSetup.mapId = null
 		isShowing = false
 		//TODO: test
-		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
+		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.objects[' + infoWindowSetup.id + '].close(); delete svyDataVis.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
@@ -884,9 +884,9 @@ function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
 	var dv = scopes.modDataVisualization.createVisualizationContainer(container, forms.GoogleMap)
 	
-	scopes.modUtils$WebClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
+	scopes.modUtils$webClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
 	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
-	scopes.modUtils$WebClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
+	scopes.modUtils$webClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
 	
 	var mapSetup = {
 		id: dv.getId(),
@@ -1003,7 +1003,7 @@ function Map(container, options) {
 					})
 					
 					code += ');'
-					scopes.modUtils$WebClient.executeClientsideScript(code)
+					scopes.modUtils$webClient.executeClientsideScript(code)
 				}
 		} else {
 			application.output('Trying to update a non-existing DataVisualization instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
@@ -1107,7 +1107,7 @@ function Map(container, options) {
 	 */
 	this.panBy = function(x, y) {
 		//No state update, because no way to determine the new center. State will be updated async
-		scopes.modUtils$WebClient.executeClientsideScript('svyDataVis.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
+		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
 	}
 
 	/**
@@ -1129,7 +1129,7 @@ function Map(container, options) {
 	 */
 	this.panToBounds = function(bounds){
 		//CHEKCME: why using WCUtils plugin here and not update state?
-		scopes.modUtils$WebClient.executeClientsideScript('var bounds = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyDataVis.JSON2Object();svyDataVis.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		scopes.modUtils$webClient.executeClientsideScript('var bounds = svyDataVis.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyDataVis.JSON2Object();svyDataVis.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**
