@@ -1,5 +1,6 @@
 /*
  * Google Maps APIv3.9 implementation: https://developers.google.com/maps/documentation/javascript/reference
+ * FIXME: replace references to scopes.modUtils$webClient.executeClientsideScript with references to executeClientsideScript on the DV instance for Sc compatibility
  * TODO: implement PolyLine
  */
 
@@ -363,10 +364,9 @@ function Marker(options) {
 			/**@type {RuntimeForm<GoogleMap>}*/
 			var map = forms[markerSetup.options.map.getId()]
 			if (map) {
-				map.persistObject(markerSetup, true)
-				
+				var code
 				if (methodName && map.isRendered()) {
-					var code = 'svyDataVis.objects[\'' + markerSetup.id + '\'].' + methodName + '('
+					code = 'svyDataVis.objects[\'' + markerSetup.id + '\'].' + methodName + '('
 					
 					args.forEach(function(value,index,array){
 						code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
@@ -376,8 +376,8 @@ function Marker(options) {
 					})
 					
 					code += ');'
-					scopes.modUtils$webClient.executeClientsideScript(code)
 				}
+				map.persistObject(markerSetup, code, true)
 			} else {
 				application.output('Trying to update a non-existing DataVisualization instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
 			}
@@ -474,8 +474,8 @@ function Marker(options) {
 		if (options.map != null) { 
 			//TODO: make APi to add/remove subtypes
 			forms[options.map.getId()].desistObject(markerSetup.id)
+			forms[options.map.getId()].executeClientsideScript("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
 			options.map = null
-			scopes.modUtils$webClient.executeClientsideScript("svyDataVis.gmaps.removeMarker('" + markerSetup.id + "')")
 		}
 		if (map) {
 			options.map = map
@@ -762,6 +762,7 @@ function InfoWindow(options) {
 	 * @this {InfoWindow}
 	 */
 	this.open = function(mp, mkr) { 
+		//FIXME: this method doesn't take into account if the MAP is already rendered or not. works fine in WC, but not in SC where code gets executed immediatly
 		//TODO: handle the scenario where a InfoWindow is re-opened on another Map
 		//TODO: should we handle opening the InfoWindow if already open?
 		if (!mp) {
@@ -780,12 +781,11 @@ function InfoWindow(options) {
 		infoWindowSetup.mapId = mp.getId()
 		forms[mp.getId()].allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserCallback
 		
-		
 		isShowing = true
-		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		forms[mp.getId()].executeClientsideScript('svyDataVis.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyDataVis.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyDataVis', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
 		var tmp = application.getUUID().toString()
-		scopes.modUtils$webClient.executeClientsideScript('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
+		forms[mp.getId()].executeClientsideScript('svyDataVis.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyDataVis.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
@@ -882,12 +882,13 @@ var setupinfoWindow = function(){
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
-	var dv = scopes.modDataVisualization.createVisualizationContainer(container, forms.GoogleMap)
+	var dv = scopes.modDataVisualization.createVisualizationContainer(container, 'GoogleMap')
 	
-	scopes.modUtils$webClient.addJavaScriptDependancy("media:///googleMapsHandler.js", dv)
-	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
-	scopes.modUtils$webClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
-	
+	dv.addJavaScriptDependancy("media:///googleMapsHandler.js")
+//	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
+//	scopes.modUtils$webClient.addOnDOMReadyScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
+	dv.setAPICredentials(apiKey, apiClientId)
+
 	var mapSetup = {
 		id: dv.getId(),
 		type: "map",
@@ -990,21 +991,20 @@ function Map(container, options) {
 		/**@type {RuntimeForm<GoogleMap>}*/
 		var map = forms[mapSetup.id]
 		if (map) {
-			map.persistObject(mapSetup)
-			
+			var code
 			if (methodName && map.isRendered()) {
-					var code = 'svyDataVis.objects[\'' + mapSetup.id + '\'].' + methodName + '('
-					
-					args.forEach(function(value,index,array){
-						code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
-						if (index != array.length - 1) {
-							code += ','
-						}
-					})
-					
-					code += ');'
-					scopes.modUtils$webClient.executeClientsideScript(code)
-				}
+				code = 'svyDataVis.objects[\'' + mapSetup.id + '\'].' + methodName + '('
+				
+				args.forEach(function(value,index,array){
+					code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
+					if (index != array.length - 1) {
+						code += ','
+					}
+				})
+				
+				code += ');'
+			}
+			map.persistObject(mapSetup, code)
 		} else {
 			application.output('Trying to update a non-existing DataVisualization instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
 		}
