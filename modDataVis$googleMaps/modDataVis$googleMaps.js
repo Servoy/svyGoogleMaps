@@ -8,7 +8,7 @@
  * @private
  * @type {String}
  *
- * @properties={typeid:35,uuid:"AA2E7779-1CF4-4AC9-AFC0-FF86EBE4DFD8"}
+ * @properties={typeid:35,uuid:"EF23AE1F-2784-4223-B817-4227C99BEE19"}
  */
 var apiKey
 
@@ -26,7 +26,7 @@ function setAPIKey(key) {
  * @private 
  * @type {String}
  *
- * @properties={typeid:35,uuid:"54070EC1-69C2-4530-896A-DA31247F99A9"}
+ * @properties={typeid:35,uuid:"1DA9F8F0-7731-437B-BE7C-CB29FC59C0DC"}
  */
 var apiClientId
 
@@ -82,7 +82,7 @@ var eventSetup = function() {
  * @properties={typeid:24,uuid:"E92C5DA2-94C4-4A0C-8F62-FD28DC3424D5"}
  */
 function LatLng(lat, lng) {
-	this.toObjectPresentation = function() {
+	this.toJSON = function() {
 		return { svySpecial: true, type: 'constructor', parts: ['google', 'maps', 'LatLng'], args: [this.lat(), this.lng()] }
 	}
 	
@@ -141,7 +141,7 @@ function LatLngBounds(sw, ne){
 	sw = new LatLng(minLat, minLng);
 	ne = new LatLng(maxLat, maxLng);
 	
-	this.toObjectPresentation = function(){
+	this.toJSON = function(){
 		return {
 			svySpecial: true,
 			type: 'constructor',
@@ -274,9 +274,10 @@ function LatLngBounds(sw, ne){
  * @properties={typeid:24,uuid:"CC65FD0C-26F6-4932-A711-9BF5FDD62B2D"}
  */
 function MapTypeId(type) {
-	this.toObjectPresentation = function() {
+	this.toJSON = function() {
 		return { svySpecial: true, type: 'reference', parts: ['google', 'maps', 'MapTypeId', this.type] }
 	}
+	
 	this.type = type
 }
 
@@ -388,7 +389,7 @@ function Marker(options) {
 	 * Internal API: DO NOT CALL
 	 * @return {Object}
 	 */
-	this.toObjectPresentation = function() {
+	this.toJSON = function() {
 		return {
 			svySpecial: true, 
 			type: 'reference', 
@@ -684,7 +685,7 @@ function InfoWindow(options) {
 	 * Internal API: DO NOT CALL
 	 * @return {Object}
 	 */
-	this.toObjectPresentation = function() {
+	this.toJSON = function() {
 		return {
 			svySpecial: true, 
 			type: 'reference', 
@@ -899,7 +900,7 @@ function Map(container, options) {
 	 * Internal API, DO NOT CALL
 	 * @return {Object}
 	 */
-	this.toObjectPresentation = function() {
+	this.toJSON = function() {
 		return {
 			svySpecial: true, 
 			type: 'reference', 

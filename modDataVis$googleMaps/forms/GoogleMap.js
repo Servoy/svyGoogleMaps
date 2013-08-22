@@ -7,32 +7,18 @@ function getDataVisualizationId() {
 }
 
 /**
- * Internal API: DO NOT CALL
- * @param o
- * 
- * @properties={typeid:24,uuid:"3B85D8EA-C07D-44BB-B59B-7D12275AA988"}
- */
-function serializeObject(o) {
-	return _super.serializeObject(o, [
-		scopes.modDataVis$googleMaps.LatLng, 
-		scopes.modDataVis$googleMaps.MapTypeId, 
-		scopes.modDataVis$googleMaps.Marker, 
-		scopes.modDataVis$googleMaps.InfoWindow, 
-		scopes.modDataVis$googleMaps.Map
-		])
-}
-
-/**
+ * @private 
  * @type {String}
  *
- * @properties={typeid:35,uuid:"AEFB97E7-2D29-49CB-80AA-64A0D403835B"}
+ * @properties={typeid:35,uuid:"6EF88A4D-CF85-41A2-9343-D9B3F765EFDC"}
  */
 var apiKey
 
 /**
+ * @private 
  * @type {String}
  *
- * @properties={typeid:35,uuid:"452C9C51-39D9-4E2D-A76A-FDBB50EF4147"}
+ * @properties={typeid:35,uuid:"D221A5C4-26C8-4BB3-8FE4-292ABA27C91F"}
  */
 var apiClientId
 
@@ -46,6 +32,7 @@ function setAPICredentials(key, clientId) {
 	apiKey = key
 	apiClientId = clientId
 }
+
 /**
  * Callback method for when form is shown.
  *
@@ -58,5 +45,6 @@ function setAPICredentials(key, clientId) {
  */
 function onShow(firstShow, event) {
 	_super.onShow(firstShow, event)
+	//FIXME: This doens't get called on refresh (F5), thus the map doesn't load
 	executeClientsideScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 }
