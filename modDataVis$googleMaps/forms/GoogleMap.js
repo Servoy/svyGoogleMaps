@@ -34,6 +34,20 @@ function setAPICredentials(key, clientId) {
 }
 
 /**
+ * TODO push this into (Abstract)DataVisualizer and allow multiple add's
+ * @param code
+ *
+ * @properties={typeid:24,uuid:"ACF8D4D7-FC02-4849-AF7F-6EA5D40EC445"}
+ */
+function addInitScript(code) {
+	if (scopes.utils.system.isWebClient()) {
+		scopes.modUtils$webClient.addOnLoadScript(code, forms[controller.getName()])
+	} else {
+		executeClientsideScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+	}
+}
+
+/**
  * Callback method for when form is shown.
  *
  * @param {Boolean} firstShow form is shown first time after load
@@ -46,5 +60,10 @@ function setAPICredentials(key, clientId) {
 function onShow(firstShow, event) {
 	_super.onShow(firstShow, event)
 	//FIXME: This doens't get called on refresh (F5), thus the map doesn't load
-	executeClientsideScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+	//executeClientsideScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+	/* solution could be to attach a a Wicket AbstractBehavior in the WC to add something to the head in renderHead, which gets added everytime the component is rendered, also on refresh
+	 * Another approach could be to offer a method on AbstractDataVisualizer like add(Clientside)OnRenderScript
+	 * 
+	 */
+	addInitScript('svyDataVis.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 }
