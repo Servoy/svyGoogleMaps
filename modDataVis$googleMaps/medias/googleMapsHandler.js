@@ -64,10 +64,10 @@ svyDataVis.gmaps = {
 	initialize: function() {
 		svyDataVis.log('initialize called for GMAPS: ' + (arguments.length > 0 ? Array.prototype.slice.call(arguments).join() : ' -none-'))
 		
-		for (var l = 0; l < arguments.length; l++) { //Storing the ID's to initialize in case initialize is called before the Maps API is loaded
+		 //Storing the ID's to initialize for later processing in case initialize is called before the Maps API is loaded
+		for (var l = 0; l < arguments.length; l++) {
 			svyDataVis.gmaps.todos.push(arguments[l])
 		}
-	
 		if (!window.google || google == undefined || !google.maps) {
 			return
 		}
