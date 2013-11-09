@@ -378,7 +378,7 @@ function Marker(options) {
 					
 					code += ');'
 				}
-				map.persistObject(markerSetup, code, true)
+				map.persistObject(markerSetup, code)
 			} else {
 				application.output('Trying to update a non-existing DataVisualization instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
 			}
@@ -996,14 +996,23 @@ function Map(container, options) {
 			if (methodName && map.isRendered()) {
 				code = 'svyDataVis.objects[\'' + mapSetup.id + '\'].' + methodName + '('
 				
-				args.forEach(function(value,index,array){
-					code += 'svyDataVis.JSON2Object(\'' + map.serializeObject(args[index]) + '\')'
-					if (index != array.length - 1) {
-						code += ','
+				for (var j = 0; j < args.length; j++) {
+					var value = args[j]
+					switch (typeof value) {
+						case 'string':
+							code += "'" + value + "',"
+							break
+						case 'number':
+						case 'boolean':
+						case 'undefined':
+							code += value + ','
+							break;
+						default:
+							code += "svyDataVis.JSON2Object('" + map.serializeObject(value) + "'),"	
+							break;
 					}
-				})
-				
-				code += ');'
+				}
+				code = code.slice(0,-1) + ');'
 			}
 			map.persistObject(mapSetup, code)
 		} else {
