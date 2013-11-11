@@ -380,7 +380,7 @@ function Marker(options) {
 				}
 				map.persistObject(markerSetup, code)
 			} else {
-				application.output('Trying to update a non-existing DataVisualization instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
+				application.output('Trying to update a non-existing Component instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
 			}
 		}
 	}
@@ -1016,7 +1016,7 @@ function Map(container, options) {
 			}
 			map.persistObject(mapSetup, code)
 		} else {
-			application.output('Trying to update a non-existing DataVisualization instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
+			application.output('Trying to update a non-existing Component instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
 		}
 	}
 	
