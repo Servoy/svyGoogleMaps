@@ -883,7 +883,7 @@ var setupinfoWindow = function(){
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
-	var dv = scopes.modDataVisualization.createVisualizationContainer(container, 'GoogleMap')
+	var dv = scopes.modComponent.createVisualizationContainer(container, 'GoogleMap')
 	
 	dv.addJavaScriptDependancy("media:///googleMapsHandler.js")
 //	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyDataVis.gmaps.loadApi function
