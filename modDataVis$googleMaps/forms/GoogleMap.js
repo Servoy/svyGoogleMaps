@@ -34,7 +34,7 @@ function setAPICredentials(key, clientId) {
 }
 
 /**
- * TODO push this into (Abstract)DataVisualizer and allow multiple add's
+ * TODO push this into (Abstract)Component and allow multiple add's
  * @param code
  *
  * @properties={typeid:24,uuid:"ACF8D4D7-FC02-4849-AF7F-6EA5D40EC445"}
