@@ -323,7 +323,7 @@ var MapTypeIds = {
  */
 function Marker(options) {
 	var markerSetup = {
-		id: application.getUUID().toString(),
+		id: scopes.modComponent.getUID(),
 		type: "marker",
 		options: options
 	}
@@ -673,7 +673,7 @@ var setupMarker = function(){
 function InfoWindow(options) {
 	var isShowing = false
 	var infoWindowSetup = {
-		id: application.getUUID().toString(),
+		id: scopes.modComponent.getUID(),
 		mapId: null,
 		type: "infoWindow",
 		options: options
@@ -785,7 +785,7 @@ function InfoWindow(options) {
 		isShowing = true
 		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyComp', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
-		var tmp = application.getUUID().toString()
+		var tmp = scopes.modComponent.getUID()
 		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
