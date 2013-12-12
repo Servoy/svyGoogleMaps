@@ -1,6 +1,6 @@
 /*
  * Google Maps APIv3.9 implementation: https://developers.google.com/maps/documentation/javascript/reference
- * FIXME: replace references to scopes.modUtils$webClient.executeClientsideScript with references to executeClientsideScript on the DV instance for Sc compatibility
+ * FIXME: replace references to scopes.svyWebClientUtils.executeClientsideScript with references to executeClientsideScript on the DV instance for Sc compatibility
  * TODO: implement PolyLine
  */
 
@@ -723,7 +723,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			scopes.modUtils$webClient.executeClientsideScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -797,7 +797,7 @@ function InfoWindow(options) {
 		infoWindowSetup.mapId = null
 		isShowing = false
 		//TODO: test
-		scopes.modUtils$webClient.executeClientsideScript('svyComp.objects[' + infoWindowSetup.id + '].close(); delete svyComp.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
+		scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[' + infoWindowSetup.id + '].close(); delete svyComp.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
@@ -887,7 +887,7 @@ function Map(container, options) {
 	
 	dv.addJavaScriptDependancy("media:///googleMapsHandler.js")
 //	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyComp.gmaps.loadApi function
-//	scopes.modUtils$webClient.addOnDOMReadyScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
+//	scopes.svyWebClientUtils.addOnDOMReadyScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
 	dv.setAPICredentials(apiKey, apiClientId)
 
 	var mapSetup = {
@@ -1117,7 +1117,7 @@ function Map(container, options) {
 	 */
 	this.panBy = function(x, y) {
 		//No state update, because no way to determine the new center. State will be updated async
-		scopes.modUtils$webClient.executeClientsideScript('svyComp.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
+		scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
 	}
 
 	/**
@@ -1139,7 +1139,7 @@ function Map(container, options) {
 	 */
 	this.panToBounds = function(bounds){
 		//CHEKCME: why using WCUtils plugin here and not update state?
-		scopes.modUtils$webClient.executeClientsideScript('var bounds = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		scopes.svyWebClientUtils.executeClientsideScript('var bounds = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**

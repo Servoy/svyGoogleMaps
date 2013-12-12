@@ -40,8 +40,8 @@ function setAPICredentials(key, clientId) {
  * @properties={typeid:24,uuid:"ACF8D4D7-FC02-4849-AF7F-6EA5D40EC445"}
  */
 function addInitScript(code) {
-	if (scopes.utils.system.isWebClient()) {
-		scopes.modUtils$webClient.addOnLoadScript(code, forms[controller.getName()])
+	if (scopes.modUtils$system.isWebClient()) {
+		scopes.svyWebClientUtils.addOnDOMReadyScript(code, forms[controller.getName()])
 	} else {
 		executeClientsideScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 	}
