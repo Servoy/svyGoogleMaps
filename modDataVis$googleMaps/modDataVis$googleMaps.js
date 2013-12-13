@@ -323,7 +323,7 @@ var MapTypeIds = {
  */
 function Marker(options) {
 	var markerSetup = {
-		id: scopes.modComponent.getUID(),
+		id: scopes.svyComponent.getUID(),
 		type: "marker",
 		options: options
 	}
@@ -673,7 +673,7 @@ var setupMarker = function(){
 function InfoWindow(options) {
 	var isShowing = false
 	var infoWindowSetup = {
-		id: scopes.modComponent.getUID(),
+		id: scopes.svyComponent.getUID(),
 		mapId: null,
 		type: "infoWindow",
 		options: options
@@ -785,7 +785,7 @@ function InfoWindow(options) {
 		isShowing = true
 		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyComp', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
-		var tmp = scopes.modComponent.getUID()
+		var tmp = scopes.svyComponent.getUID()
 		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
@@ -883,7 +883,7 @@ var setupinfoWindow = function(){
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<GoogleMap>}*/
-	var dv = scopes.modComponent.createVisualizationContainer(container, 'GoogleMap')
+	var dv = scopes.svyComponent.createVisualizationContainer(container, 'GoogleMap')
 	
 	dv.addJavaScriptDependancy("media:///googleMapsHandler.js")
 //	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyComp.gmaps.loadApi function
