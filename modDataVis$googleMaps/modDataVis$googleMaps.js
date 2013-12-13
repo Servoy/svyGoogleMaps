@@ -48,7 +48,7 @@ function setAPIClientId(clientId) {
 /**
  * @private
  * @constructor 
- * @extends {scopes.modUtils$eventManager.Event}
+ * @extends {scopes.svyEventManager.Event}
  * 
  * @param {String} type
  * @param {*} source
@@ -57,7 +57,7 @@ function setAPIClientId(clientId) {
  * @properties={typeid:24,uuid:"56660B15-0127-4966-96D2-F30BB9343ED7"}
  */
 function Event(type, source, position, data) {
-	scopes.modUtils$eventManager.Event.call(this, type, source, data);
+	scopes.svyEventManager.Event.call(this, type, source, data);
 	
 	this.getPosition = function() {
 		return position||null;
@@ -69,7 +69,7 @@ function Event(type, source, position, data) {
  * @properties={typeid:35,uuid:"B6F2BB47-C7C4-46DA-833F-95F4AF3069DE",variableType:-4}
  */
 var eventSetup = function() {
-	Event.prototype = Object.create(scopes.modUtils$eventManager.Event.prototype);
+	Event.prototype = Object.create(scopes.svyEventManager.Event.prototype);
 	Object.freeze(Event); 
 } ()
 
@@ -352,7 +352,7 @@ function Marker(options) {
 		}
 		
 		
-		scopes.modUtils$eventManager.fireEvent(markerSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
+		scopes.svyEventManager.fireEvent(markerSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
 		updateState()
 	}
 		
@@ -598,19 +598,19 @@ function Marker(options) {
 //	}
 	
 	this.addClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.CLICK, eventHandler);
+		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.CLICK, eventHandler);
 	}
 
 	this.addDoubleClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
+		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
 	}
 
 	this.addPositionChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.POSITION_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.POSITION_CHANGED, eventHandler);
 	}
 
 	this.addRightClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.RIGHTCLICK, eventHandler);
+		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.RIGHTCLICK, eventHandler);
 	}
 
 	/**
@@ -618,7 +618,7 @@ function Marker(options) {
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
-		scopes.modUtils$eventManager.removeListener(markerSetup.id, type, eventHandler);
+		scopes.svyEventManager.removeListener(markerSetup.id, type, eventHandler);
 	}
 	
 	/**
@@ -707,7 +707,7 @@ function InfoWindow(options) {
 				return;
 		}
 		
-		scopes.modUtils$eventManager.fireEvent(infoWindowSetup.id, eventType, new Event(eventType, thisInstance));
+		scopes.svyEventManager.fireEvent(infoWindowSetup.id, eventType, new Event(eventType, thisInstance));
 	}
 	
 	/**
@@ -801,7 +801,7 @@ function InfoWindow(options) {
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(infoWindowSetup.id, InfoWindow.EVENT_TYPES.CLOSECLICK, eventHandler);
+		scopes.svyEventManager.addListener(infoWindowSetup.id, InfoWindow.EVENT_TYPES.CLOSECLICK, eventHandler);
 	}
 	
 	/**
@@ -809,7 +809,7 @@ function InfoWindow(options) {
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
-		scopes.modUtils$eventManager.removeListener(infoWindowSetup.id, type, eventHandler);
+		scopes.svyEventManager.removeListener(infoWindowSetup.id, type, eventHandler);
 	}
 
 //	/**
@@ -927,7 +927,7 @@ function Map(container, options) {
 			if (!mapSetup.options['bounds'] || !mapSetup.options['bounds'].equals(newBounds)) {
 				dataVal = {oldValue: mapSetup.options['bounds'], newValue: newBounds}
 				mapSetup.options['bounds'] = newBounds;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, data));
+				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, data));
 			}
 
 			//center_changed
@@ -935,20 +935,20 @@ function Map(container, options) {
 			if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
 				dataVal = {oldValue: mapSetup.options.center, newValue: newCenter}
 				mapSetup.options.center = newCenter;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
+				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
 			}
 			
 			//projection_changed
 //			if (o.projection != options.projection) {
 //				
-//				scopes.modUtils$eventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
+//				scopes.svyEventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, [Map.EVENT_TYPES.ZOOM_CHANGED, data]);
 //			}
 			
 			//zoom_changed
 			if (data.zoom != mapSetup.options.zoom) {
 				dataVal = {oldValue: mapSetup.options.zoom, newValue: data.zoom}
 				mapSetup.options.zoom = data.zoom;
-				scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
+				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
 			}
 		} else {
 			var dataVal
@@ -975,7 +975,7 @@ function Map(container, options) {
 					application.output('Unknown Map eventType: ' + eventType)
 					return;
 			}
-			scopes.modUtils$eventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
+			scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
 		}
 		
 		updateState()
@@ -1208,70 +1208,70 @@ function Map(container, options) {
 	 * @param {Function} eventHandler
 	 */
 	this.addBoundChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, eventHandler);
 	}
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addCenterChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, eventHandler);
 	}
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CLICK, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CLICK, eventHandler);
 	}
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addDoubleClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, eventHandler);
 	}	
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addHeadingChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, eventHandler);
 	}	
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addMapTypeIdListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, eventHandler);
 	}	
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addProjectionChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
 	}	
 
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addRightClickListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.RIGHTCLICK, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.RIGHTCLICK, eventHandler);
 	}	
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addTiltChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, eventHandler);
 	}		
 	
 	/**
 	 * @param {Function} eventHandler
 	 */
 	this.addZoomChangedListener = function(eventHandler) {
-		scopes.modUtils$eventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
+		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
 	}
 	
 	/**
@@ -1279,7 +1279,7 @@ function Map(container, options) {
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
-		scopes.modUtils$eventManager.removeListener(mapSetup.id, type, eventHandler);
+		scopes.svyEventManager.removeListener(mapSetup.id, type, eventHandler);
 	}
 }
 
