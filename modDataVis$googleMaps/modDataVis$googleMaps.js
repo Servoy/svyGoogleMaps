@@ -767,9 +767,9 @@ function InfoWindow(options) {
 		//TODO: handle the scenario where a InfoWindow is re-opened on another Map
 		//TODO: should we handle opening the InfoWindow if already open?
 		if (!mp) {
-			throw scopes.modUtils$exceptions.IllegalArgumentException('Map (mp) argument cannot be null')
+			throw scopes.svyExceptions.IllegalArgumentException('Map (mp) argument cannot be null')
 		} else if (!(mp instanceof Map)) {
-			throw scopes.modUtils$exceptions.IllegalArgumentException('Map (mp) argument must be of type Map')			
+			throw scopes.svyExceptions.IllegalArgumentException('Map (mp) argument must be of type Map')			
 		}
 		if (mkr) {
 			if (mp != mkr.getMap()) {
