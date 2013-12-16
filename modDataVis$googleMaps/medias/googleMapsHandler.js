@@ -1,9 +1,9 @@
 svyComp.gmaps = {
 	loadApi: function(key, clientId, sensor) {
-		if (document.getElementById('gmapsAPI')) {
+		if (this.apiInserted /*document.getElementById('gmapsAPI')*/) {
 			return //workaround to prevent adding the Maps API multiple times
 		}
-		svyComp.log('Injecting API?')
+		svyComp.log('Injecting Google Maps API')
 		var url = 'http://maps.googleapis.com/maps/api/js?v=3.11&callback=svyCompGMapCallback&sensor='
 		url += sensor ? 'true' : 'false' 
 		if (key) url += '&key=' + key
@@ -14,7 +14,10 @@ svyComp.gmaps = {
 		script.src = url
 		script.id = 'gmapsAPI'
 		document.head.appendChild(script);
+		this.apiInserted = true
 	},
+	apiInserted: false,
+	apiLoaded: false,
 	
 	todos: [],
 	
@@ -68,7 +71,7 @@ svyComp.gmaps = {
 		for (var l = 0; l < arguments.length; l++) {
 			svyComp.gmaps.todos.push(arguments[l])
 		}
-		if (!window.google || google == undefined || !google.maps) {
+		if (!svyComp.gmaps.apiLoaded) {
 			return
 		}
 		
@@ -221,6 +224,7 @@ svyComp.gmaps = {
 }
 	
 function svyCompGMapCallback() {
-	svyComp.log('CHECK: gmap API loaded, callback invoked')
+	svyComp.log('gmap API loaded, callback invoked')
+	svyComp.gmaps.apiLoaded = true
 	svyComp.gmaps.initialize()
 }
