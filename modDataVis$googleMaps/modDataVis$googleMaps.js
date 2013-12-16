@@ -1,6 +1,5 @@
 /*
  * Google Maps APIv3.9 implementation: https://developers.google.com/maps/documentation/javascript/reference
- * FIXME: replace references to scopes.svyWebClientUtils.executeClientsideScript with references to executeClientsideScript on the DV instance for Sc compatibility
  * TODO: implement PolyLine
  */
 
@@ -475,7 +474,7 @@ function Marker(options) {
 		if (options.map != null) { 
 			//TODO: make APi to add/remove subtypes
 			forms[options.map.getId()].desistObject(markerSetup.id)
-			forms[options.map.getId()].executeClientsideScript("svyComp.gmaps.removeMarker('" + markerSetup.id + "')")
+			forms[options.map.getId()].executeScript("svyComp.gmaps.removeMarker('" + markerSetup.id + "')")
 			options.map = null
 		}
 		if (map) {
@@ -723,7 +722,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			forms[infoWindowSetup.mapId].executeScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -783,10 +782,10 @@ function InfoWindow(options) {
 		forms[mp.getId()].allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserCallback
 		
 		isShowing = true
-		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyComp', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
 		var tmp = scopes.svyComponent.getUID()
-		forms[mp.getId()].executeClientsideScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
+		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
@@ -797,7 +796,7 @@ function InfoWindow(options) {
 		infoWindowSetup.mapId = null
 		isShowing = false
 		//TODO: test
-		scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[' + infoWindowSetup.id + '].close(); delete svyComp.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
+		forms[infoWindowSetup.mapId].executeScript('svyComp.objects[' + infoWindowSetup.id + '].close(); delete svyComp.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
 	this.addOnCLoseListener = function(eventHandler) {
@@ -1117,7 +1116,7 @@ function Map(container, options) {
 	 */
 	this.panBy = function(x, y) {
 		//No state update, because no way to determine the new center. State will be updated async
-		scopes.svyWebClientUtils.executeClientsideScript('svyComp.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
+		forms[mapSetup.id].executeScript('svyComp.objects[\'' + mapSetup.id + '\'].panBy(' + x + ','+ y + ');')		
 	}
 
 	/**
@@ -1138,8 +1137,8 @@ function Map(container, options) {
 	 * @param {LatLngBounds} bounds
 	 */
 	this.panToBounds = function(bounds){
-		//CHEKCME: why using WCUtils plugin here and not update state?
-		scopes.svyWebClientUtils.executeClientsideScript('var bounds = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		//CHEKCME: why using executeScript here and not update state?
+		forms[mapSetup.id].executeScript('var bounds = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**

@@ -43,7 +43,7 @@ function addInitScript(code) {
 	if (scopes.svySystem.isWebClient()) {
 		scopes.svyWebClientUtils.addOnDOMReadyScript(code, forms[controller.getName()])
 	} else {
-		executeClientsideScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+		executeScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 	}
 }
 
@@ -60,7 +60,7 @@ function addInitScript(code) {
 function onShow(firstShow, event) {
 	_super.onShow(firstShow, event)
 	//FIXME: This doens't get called on refresh (F5), thus the map doesn't load
-	//executeClientsideScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
+	//executeScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 	/* solution could be to attach a a Wicket AbstractBehavior in the WC to add something to the head in renderHead, which gets added everytime the component is rendered, also on refresh
 	 * Another approach could be to offer a method on AbstractComponent like add(Clientside)OnRenderScript
 	 * 
