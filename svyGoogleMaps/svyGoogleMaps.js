@@ -772,7 +772,7 @@ function InfoWindow(options) {
 		}
 		if (mkr) {
 			if (mp != mkr.getMap()) {
-				application.output('Trying to show Infowindow om map X positioned by a Marker located om Map Y. Ignorimg supplied Map X' , LOGGINGLEVEL.WARNING)
+				application.output('Trying to show Infowindow on map X positioned by a Marker located om Map Y. Ignoring supplied Map X' , LOGGINGLEVEL.WARNING)
 			}
 		} else if (!this.getPosition()) {
 			application.output('Either a Position must be set or an anchor supplied in order to open a Infowindow' , LOGGINGLEVEL.WARNING)
@@ -885,9 +885,7 @@ function Map(container, options) {
 	var dv = scopes.svyComponent.createVisualizationContainer(container, 'svyGoogleMap')
 	
 	dv.addJavaScriptDependancy("media:///svyGoogleMaps/googleMapsHandler.js")
-//	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyComp.gmaps.loadApi function
-//	scopes.svyWebClientUtils.addOnDOMReadyScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
-	dv.setAPICredentials(apiKey, apiClientId)
+	dv.addInitializeScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)')
 
 	var mapSetup = {
 		id: dv.getId(),
