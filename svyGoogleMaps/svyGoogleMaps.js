@@ -768,7 +768,6 @@ function InfoWindow(options) {
 	 * @this {InfoWindow}
 	 */
 	this.open = function(mp, mkr) { 
-		//FIXME: this method doesn't take into account if the MAP is already rendered or not. works fine in WC, but not in SC where code gets executed immediately
 		//TODO: handle the scenario where a InfoWindow is re-opened on another Map
 		//TODO: should we handle opening the InfoWindow if already open?
 		if (!mp) {
