@@ -361,7 +361,7 @@ function Marker(options) {
 	 */
 	function updateState(methodName, args) {
 		if (markerSetup.options.map) {
-			/**@type {RuntimeForm<GoogleMap>}*/
+			/**@type {RuntimeForm<svyGoogleMap>}*/
 			var map = forms[markerSetup.options.map.getId()]
 			if (map) {
 				var code
@@ -613,7 +613,7 @@ function Marker(options) {
 	}
 
 	/**
-	 * @param {String} type See scopes.modDataVis$googleMaps.Marker.EVENT_TYPES
+	 * @param {String} type See scopes.svyGoogleMaps.Marker.EVENT_TYPES
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
@@ -804,7 +804,7 @@ function InfoWindow(options) {
 	}
 	
 	/**
-	 * @param {String} type See scopes.modDataVis$googleMaps.InfoWindow.EVENT_TYPES
+	 * @param {String} type See scopes.svyGoogleMaps.InfoWindow.EVENT_TYPES
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
@@ -881,10 +881,10 @@ var setupinfoWindow = function(){
  * @properties={typeid:24,uuid:"1E5BE0D4-5E7A-489D-AACA-7BECA54B2CD1"}
  */
 function Map(container, options) {
-	/**@type {RuntimeForm<GoogleMap>}*/
+	/**@type {RuntimeForm<svyGoogleMap>}*/
 	var dv = scopes.svyComponent.createVisualizationContainer(container, 'GoogleMap')
 	
-	dv.addJavaScriptDependancy("media:///googleMapsHandler.js")
+	dv.addJavaScriptDependancy("media:///svyGoogleMaps/googleMapsHandler.js")
 //	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyComp.gmaps.loadApi function
 //	scopes.svyWebClientUtils.addOnDOMReadyScript('svyComp.gmaps.loadApi(' + (apiClientId ? 'null' : '\'' + apiKey + '\'') + ',\'' + apiClientId + '\',false)', dv)
 	dv.setAPICredentials(apiKey, apiClientId)
@@ -988,7 +988,7 @@ function Map(container, options) {
 	 * @param {Array} [args]
 	 */
 	function updateState(methodName, args) {
-		/**@type {RuntimeForm<GoogleMap>}*/
+		/**@type {RuntimeForm<svyGoogleMap>}*/
 		var map = forms[mapSetup.id]
 		if (map) {
 			var code
@@ -1274,7 +1274,7 @@ function Map(container, options) {
 	}
 	
 	/**
-	 * @param {String} type See scopes.modDataVis$googleMaps.Map.EVENT_TYPES
+	 * @param {String} type See scopes.svyGoogleMaps.Map.EVENT_TYPES
 	 * @param eventHandler
 	 */
 	this.removeListener = function(type, eventHandler) {
