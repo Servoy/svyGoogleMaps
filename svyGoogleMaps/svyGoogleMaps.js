@@ -4,6 +4,12 @@
  */
 
 /**
+ * @private 
+ * @properties={typeid:35,uuid:"7EF3A023-510B-4865-BAC9-81D954931184",variableType:-4}
+ */
+var log = scopes.svyLogManager.getLogger('com.servoy.bap.components.googlemaps')
+
+/**
  * @private
  * @type {String}
  *
@@ -346,7 +352,7 @@ function Marker(options) {
 			case Marker.EVENT_TYPES.RIGHTCLICK:
 				break;
 			default:
-				application.output('Unknown Marker eventType: ' + eventType)
+				log.warn('Unknown Marker eventType: ' + eventType)
 				return;
 		}
 		
@@ -379,7 +385,7 @@ function Marker(options) {
 				}
 				map.persistObject(markerSetup, code)
 			} else {
-				application.output('Trying to update a non-existing Component instance with ID "' + markerSetup.options.map.getId() + '"', LOGGINGLEVEL.ERROR)
+				log.error('Trying to update a non-existing Component instance with ID "' + markerSetup.options.map.getId() + '"')
 			}
 		}
 	}
@@ -590,7 +596,7 @@ function Marker(options) {
 //					this.setZIndex(options[prop])
 //					break;
 //				default:
-//					application.output('Unsupported property "' + prop + '" supplied to Marker.setOptions')	
+//					log.warn('Unsupported property "' + prop + '" supplied to Marker.setOptions')	
 //					break;
 //				}
 //		}
@@ -702,7 +708,7 @@ function InfoWindow(options) {
 				isShowing = false
 				break;
 			default:
-				application.output('Unknown InfoWindow eventType: ' + eventType)
+				log.warn('Unknown InfoWindow eventType: ' + eventType)
 				return;
 		}
 		
@@ -771,11 +777,13 @@ function InfoWindow(options) {
 			throw scopes.svyExceptions.IllegalArgumentException('Map (mp) argument must be of type Map')			
 		}
 		if (mkr) {
-			if (mp != mkr.getMap()) {
-				application.output('Trying to show Infowindow on map X positioned by a Marker located om Map Y. Ignoring supplied Map X' , LOGGINGLEVEL.WARNING)
+			if (mkr.getMap() == null) {
+				log.error('Trying to show Infowindow by a Marker that is not linked to a Map')
+			} else if (mp != mkr.getMap()) {
+				log.warn('Trying to show Infowindow on map X positioned by a Marker located om Map Y. Ignoring supplied Map X')
 			}
 		} else if (!this.getPosition()) {
-			application.output('Either a Position must be set or an anchor supplied in order to open a Infowindow' , LOGGINGLEVEL.WARNING)
+			log.warn('Either a Position must be set or an anchor supplied in order to open a Infowindow')
 		}
 		
 		infoWindowSetup.mapId = mp.getId()
@@ -969,7 +977,7 @@ function Map(container, options) {
 					mapSetup.options.tilt = data
 					break;
 				default:
-					application.output('Unknown Map eventType: ' + eventType)
+					log.warn('Unknown Map eventType: ' + eventType)
 					return;
 			}
 			scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, position, dataVal));
@@ -1013,7 +1021,7 @@ function Map(container, options) {
 			}
 			map.persistObject(mapSetup, code)
 		} else {
-			application.output('Trying to update a non-existing Component instance with ID "' + mapSetup.id + '"', LOGGINGLEVEL.ERROR)
+			log.error('Trying to update a non-existing Component instance with ID "' + mapSetup.id + '"')
 		}
 	}
 	
