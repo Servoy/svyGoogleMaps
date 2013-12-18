@@ -722,7 +722,7 @@ function InfoWindow(options) {
 	this.setContent = function(content) {
 		options.content = content;
 		if (isShowing) {
-			forms[infoWindowSetup.mapId].executeScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(content) + '\'));')
+			forms[infoWindowSetup.mapId].executeScript('svyComp.objects[\'' + infoWindowSetup.id + '\'].setContent(svyComp.JSON2Object(\'' + forms[mp.getId()].serializeObject(content) + '\'));')
 		}
 	}
 	
@@ -782,10 +782,10 @@ function InfoWindow(options) {
 		forms[mp.getId()].allObjectCallbackHandlers[infoWindowSetup.id] = onBrowserCallback
 		
 		isShowing = true
-		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms.GoogleMap.serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
+		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + infoWindowSetup.id + '\']=\'' +  forms[mp.getId()].serializeObject(infoWindowSetup) + '\';svyComp.gmaps.initialize(\'' + infoWindowSetup.id +'\');')
 		var s = { svySpecial: true, type: 'call', parts: ['svyComp', 'objects',infoWindowSetup.id,'open'], args: [mp, mkr] }
 		var tmp = scopes.svyComponent.getUID()
-		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms.GoogleMap.serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
+		forms[mp.getId()].executeScript('svyComp.gmaps[\'' + tmp + '\']=\'' +  forms[mp.getId()].serializeObject(s) + '\';svyComp.gmaps.initialize(\'' + tmp +'\');')
 	}
 	
 	/**
@@ -882,7 +882,7 @@ var setupinfoWindow = function(){
  */
 function Map(container, options) {
 	/**@type {RuntimeForm<svyGoogleMap>}*/
-	var dv = scopes.svyComponent.createVisualizationContainer(container, 'GoogleMap')
+	var dv = scopes.svyComponent.createVisualizationContainer(container, 'svyGoogleMap')
 	
 	dv.addJavaScriptDependancy("media:///svyGoogleMaps/googleMapsHandler.js")
 //	//TODO: DomReady script is not the correct way, as it gets fired multiple times. Worked around it now in the svyComp.gmaps.loadApi function
@@ -1125,7 +1125,7 @@ function Map(container, options) {
 	 */
 	this.panTo = function(latLng) {
 		options.center = latLng;
-		updateState('var latLng = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(latLng) + '\');svyComp.objects[\'' + mapSetup.id + '\'].panTo(latLng);')		
+		updateState('var latLng = svyComp.JSON2Object(\'' + forms[mp.getId()].serializeObject(latLng) + '\');svyComp.objects[\'' + mapSetup.id + '\'].panTo(latLng);')		
 	}
 
 	/**
@@ -1138,7 +1138,7 @@ function Map(container, options) {
 	 */
 	this.panToBounds = function(bounds){
 		//CHEKCME: why using executeScript here and not update state?
-		forms[mapSetup.id].executeScript('var bounds = svyComp.JSON2Object(\'' + forms.GoogleMap.serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
+		forms[mapSetup.id].executeScript('var bounds = svyComp.JSON2Object(\'' + forms[mp.getId()].serializeObject(bounds) + '\'svyComp.JSON2Object();svyComp.objects[\'' + mapSetup.id + '\'].panToBounds(bounds);')
 	}
 
 	/**
