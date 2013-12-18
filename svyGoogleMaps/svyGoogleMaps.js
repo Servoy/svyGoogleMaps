@@ -779,11 +779,13 @@ function InfoWindow(options) {
 		if (mkr) {
 			if (mkr.getMap() == null) {
 				log.error('Trying to show Infowindow by a Marker that is not linked to a Map')
+				return
 			} else if (mp != mkr.getMap()) {
 				log.warn('Trying to show Infowindow on map X positioned by a Marker located om Map Y. Ignoring supplied Map X')
 			}
 		} else if (!this.getPosition()) {
 			log.warn('Either a Position must be set or an anchor supplied in order to open a Infowindow')
+			return
 		}
 		
 		infoWindowSetup.mapId = mp.getId()
