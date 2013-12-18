@@ -478,7 +478,6 @@ function Marker(options) {
 			return
 		}
 		if (options.map != null) { 
-			//TODO: make APi to add/remove subtypes
 			forms[options.map.getId()].desistObject(markerSetup.id)
 			forms[options.map.getId()].executeScript("svyComp.gmaps.removeMarker('" + markerSetup.id + "')")
 			options.map = null
