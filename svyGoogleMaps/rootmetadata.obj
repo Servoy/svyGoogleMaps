@@ -1,6 +1,6 @@
 fileVersion:44,
 mustAuthenticate:false,
-name:"modDataVis$googleMaps",
+name:"svyGoogleMaps",
 solutionType:2,
 typeid:43,
 uuid:"6DCFE0BC-4936-43D5-BE02-5900E792BCC7"
