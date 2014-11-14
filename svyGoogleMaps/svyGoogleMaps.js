@@ -303,15 +303,15 @@ var MapTypeIds = {
 
  * @constructor
  * 
- * @param {Boolean} [options.clickable] If true, the marker receives mouse and touch events. Default value is true.
+ * @param {Boolean} [options.clickable] If true, the marker receives mouse and touch events. <i>Default</i> true.
  * @param {String} [options.cursor] Mouse cursor to show on hover
- * @param {Boolean} [options.draggable] If true, the marker can be dragged. Default value is false.
+ * @param {Boolean} [options.draggable] If true, the marker can be dragged. <i>Default</i> false.
  * @param {Boolean} [options.flat] If true, the marker shadow will not be displayed.
  * @param {String} [options.icon] Icon for the foreground
  * @param {Map} [options.map] Map on which to display Marker.
- * @param {Boolean} [options.optimized] Optimization renders many markers as a single static element. Optimized rendering is enabled by default. Disable optimized rendering for animated GIFs or PNGs, or when each marker must be rendered as a separate DOM element (advanced usage only).
+ * @param {Boolean} [options.optimized] Optimization renders many markers as a single static element. Disable optimized rendering for animated GIFs or PNGs, or when each marker must be rendered as a separate DOM element (advanced usage only). <i>Default</i>  true.
  * @param {LatLng} options.position Marker position. Required.
- * @param {Boolean} [options.raiseOnDrag] If false, disables raising and lowering the marker on drag. This option is true by default.
+ * @param {Boolean} [options.raiseOnDrag] If false, disables raising and lowering the marker on drag. <i>Default</i> true.
  * @param {String} [options.shadow] Shadow image
  * @param {String} [options.title] Rollover text
  * @param {Boolean} [options.visible] If true, the marker is visible
@@ -856,35 +856,35 @@ var setupinfoWindow = function(){
  * TODO param {ZoomControlOptions} [options.zoomControlOptions] 
  */
 /**
- * Google Map impl.
+ * Google Map implementation {@link https://developers.google.com/maps/documentation/javascript/reference#Map}
  * 
  * @constructor 
  * 
  * @param {RuntimeTabPanel} container the panel in which the visualization is displayed. Note: all existing tabs in the panel will be removed
- * @param {String} [options.backgroundColor]
- * @param {LatLng} options.center
- * @param {Boolean} [options.disableDefaultUI]
- * @param {Boolean} [options.disableDoubleClickZoom]
- * @param {Boolean} [options.draggable]
- * @param {String} [options.draggableCursor]
- * @param {String} [options.draggingCursor]
- * @param {Number} [options.heading]
- * @param {Boolean} [options.keyboardShortcuts]
- * @param {Boolean} [options.mapMaker]
- * @param {Boolean} [options.mapTypeControl]
- * @param {MapTypeId} options.mapTypeId
- * @param {Number} [options.maxZoom]
- * @param {Number} [options.minZoom]
- * @param {Boolean} [options.noClear]
- * @param {Boolean} [options.overviewMapControl]
- * @param {Boolean} [options.panControl]
- * @param {Boolean} [options.rotateControl]
- * @param {Boolean} [options.scaleControl]
- * @param {Boolean} [options.scrollwheel]
- * @param {Boolean} [options.streetViewControl]
- * @param {Number} [options.tilt]
- * @param {Number} options.zoom
- * @param {Boolean} [options.zoomControl]
+ * @param {String} [options.backgroundColor] Color used for the background of the Map div. This color will be visible when tiles have not yet loaded as the user pans. This option can only be set when the map is initialized.
+ * @param {LatLng} options.center The initial Map center. Required.
+ * @param {Boolean} [options.disableDefaultUI] Enables/disables all default UI. May be overridden individually.
+ * @param {Boolean} [options.disableDoubleClickZoom] Enables/disables all default UI. May be overridden individually. <i>Default</i> true
+ * @param {Boolean} [options.draggable] If false, prevents the map from being dragged. <i>Default</i> true
+ * @param {String} [options.draggableCursor] The name or url of the cursor to display when mousing over a draggable map. This property uses the css cursor attribute to change the icon. As with the css property, you must specify at least one fallback cursor that is not a URL.
+ * @param {String} [options.draggingCursor] The name or url of the cursor to display when the map is being dragged. This property uses the css cursor attribute to change the icon. As with the css property, you must specify at least one fallback cursor that is not a URL.
+ * @param {Number} [options.heading] The heading for aerial imagery in degrees measured clockwise from cardinal direction North. Headings are snapped to the nearest available angle for which imagery is available.
+ * @param {Boolean} [options.keyboardShortcuts] If false, prevents the map from being controlled by the keyboard. <i>Default</i> true
+ * @param {Boolean} [options.mapMaker] True if Map Maker tiles should be used instead of regular tiles.
+ * @param {Boolean} [options.mapTypeControl] The initial enabled/disabled state of the Map type control.
+ * @param {MapTypeId} options.mapTypeId The initial Map mapTypeId. <i>Default</i> ROADMAP.
+ * @param {Number} [options.maxZoom] The maximum zoom level which will be displayed on the map. If omitted, or set to null, the maximum zoom from the current map type is used instead.
+ * @param {Number} [options.minZoom] The minimum zoom level which will be displayed on the map. If omitted, or set to null, the minimum zoom from the current map type is used instead.
+ * @param {Boolean} [options.noClear] If true, do not clear the contents of the Map div.
+ * @param {Boolean} [options.overviewMapControl] The enabled/disabled state of the Overview Map control.
+ * @param {Boolean} [options.panControl] The enabled/disabled state of the Pan control.
+ * @param {Boolean} [options.rotateControl] The enabled/disabled state of the Rotate control.
+ * @param {Boolean} [options.scaleControl] The initial enabled/disabled state of the Scale control.
+ * @param {Boolean} [options.scrollwheel] If false, disables scrollwheel zooming on the map. <i>Default</i> true.
+ * @param {Boolean} [options.streetViewControl] The initial enabled/disabled state of the Street View Pegman control. This control is part of the default UI, and should be set to false when displaying a map type on which the Street View road overlay should not appear (e.g. a non-Earth map type).
+ * @param {Number} [options.tilt] Controls the automatic switching behavior for the angle of incidence of the map. The only allowed values are 0 and 45. The value 0 causes the map to always use a 0° overhead view regardless of the zoom level and viewport. The value 45 causes the tilt angle to automatically switch to 45 whenever 45° imagery is available for the current zoom level and viewport, and switch back to 0 whenever 45° imagery is not available (this is the default behavior). 45° imagery is only available for SATELLITE and HYBRID map types, within some locations, and at some zoom levels. Note: getTilt returns the current tilt angle, not the value specified by this option. Because getTilt and this option refer to different things, do not bind() the tilt property; doing so may yield unpredictable effects.
+ * @param {Number} options.zoom The initial Map zoom level. Required.
+ * @param {Boolean} [options.zoomControl] The display options for the Zoom control.
  * 
  * @properties={typeid:24,uuid:"1E5BE0D4-5E7A-489D-AACA-7BECA54B2CD1"}
  */
