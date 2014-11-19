@@ -3,7 +3,7 @@
 	<name>svyGoogleMaps$demo</name>
 	<comment></comment>
 	<projects>
-		<project>servoy_localhost_resources</project>
+		<project>resources</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
