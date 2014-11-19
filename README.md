@@ -18,6 +18,13 @@ var map = new gmaps.Map(elements.tabless, {zoom: 8, center: new gmaps.LatLng(-34
 To use the latest source code clone the git repository and checkout the develop branch. Install the [egit](http://www.eclipse.org/egit/download/) plugin for Eclipse to clone the repository and import the projects into the workspace.
 
 
+Requirements
+-------------
+The Smart Client implementation of the GoogleMaps component requires the JFXPanel Bean.
+The JFXPanel requires Servoy 7.2 or higher and Java 7 update 6 or above. 
+For more details about the JFXPanel look at the [Servoy docs](https://wiki.servoy.com/display/Serv7/JFXPanel+Bean)
+
+
 Documentation
 -------------
 See the [Wiki](https://github.com/Servoy/svyGoogleMaps/wiki) for the available documentation
