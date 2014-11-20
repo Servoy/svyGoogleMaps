@@ -20,7 +20,7 @@ To use the latest source code clone the git repository and checkout the develop 
 
 Requirements
 -------------
-For the Smart Clients the GoogleMaps component requires the JFXPanel Bean which is available since Servoy 7.2 or higher.
+On Smart Clients the GoogleMaps component requires the JFXPanel Bean which is available since Servoy 7.2 or higher.
 For more details about the JFXPanel look at the [Servoy docs](https://wiki.servoy.com/display/Serv7/JFXPanel+Bean)
 
 
