@@ -12,7 +12,7 @@ the googleMaps will render inside a tabless panel placed on yuor form.
 Use the Map constructor from the svyGoogleMaps scope to load the map into the tabless panel:
 
 ```javascript
-var map = new gmaps.Map(elements.tabless, {zoom: 8, center: new gmaps.LatLng(-34.397, 150.644),})
+var map = new gmaps.Map(elements.tabless, {zoom: 8, center: new gmaps.LatLng(-34.397, 150.644)})
 ```
 
 To use the latest source code clone the git repository and checkout the develop branch. Install the [egit](http://www.eclipse.org/egit/download/) plugin for Eclipse to clone the repository and import the projects into the workspace.
