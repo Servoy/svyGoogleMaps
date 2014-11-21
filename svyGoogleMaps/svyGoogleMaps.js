@@ -601,6 +601,21 @@ function Marker(options) {
 //		}
 //	}
 	
+	/**
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * marker.addClickListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var marker = GMEvent.getSource()	// get the source Marker object
+	 *     var position = GMEvent.getPosition()	// get the Marker position
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
+	 */
 	this.addClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.CLICK, eventHandler);
 	}
@@ -608,15 +623,58 @@ function Marker(options) {
 	/**
 	 * TODO prevent single click at doubleclick
 	 * @protected 
-	 * */
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * marker.addDoubleClickListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var marker = GMEvent.getSource()	// get the source Marker object
+	 *     var position = GMEvent.getPosition()	// get the Marker position
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
+	 */
 	this.addDoubleClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
 	}
 
+	/**
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * marker.addPositionChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var marker = GMEvent.getSource()	// get the source Marker object
+	 *     var position = GMEvent.getPosition()	// get the Marker position
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
+	 */
 	this.addPositionChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.POSITION_CHANGED, eventHandler);
 	}
 
+	/**
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * marker.addRightClickListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var marker = GMEvent.getSource()	// get the source Marker object
+	 *     var position = GMEvent.getPosition()	// get the Marker position
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
+	 */
 	this.addRightClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.RIGHTCLICK, eventHandler);
 	}
@@ -811,6 +869,9 @@ function InfoWindow(options) {
 		forms[infoWindowSetup.mapId].executeScript('svyComp.objects[' + infoWindowSetup.id + '].close(); delete svyComp.objects[' + infoWindowSetup.id  + '];') //TODO: this seems to be done in the event handler on the client already
 	}
 	
+	/**
+	 * @param {function(scopes.svyEventManager.Event)} eventHandler
+	 */
 	this.addOnCLoseListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(infoWindowSetup.id, InfoWindow.EVENT_TYPES.CLOSECLICK, eventHandler);
 	}
@@ -1214,21 +1275,55 @@ function Map(container, options) {
 //	this.overlayMapTypes = [] //TODO: implement what needs implementing for this property
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addBoundChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addBoundChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, eventHandler);
 	}
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addCenterChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addCenterChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, eventHandler);
 	}
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addClickListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var position = GMEvent.getPosition()	// get the position. Some eventType might return the position as a LatLng object within the data property
+	 *     map.setCenter(position)	// center the map at the returned position
+	 * }
+	 * </pre>
 	 */
 	this.addClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.CLICK, eventHandler);
@@ -1236,22 +1331,56 @@ function Map(container, options) {
 	
 	/**
 	 * TODO prevent single click when double clicking
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
 	 * @protected 
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addDoubleClickListener(onClickCallback)
+	 * 
+	 * function onClickCallback(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var position = GMEvent.getPosition()	// get the position. Some eventType might return the position as a LatLng object within the data property
+	 *     map.setCenter(position)	// center the map at the returned position
+	 * }
+	 * </pre>
 	 */
 	this.addDoubleClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, eventHandler);
 	}	
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addHeadingChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addHeadingChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.HEADING_CHANGED, eventHandler);
 	}	
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addMapTypeIdListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addMapTypeIdListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.MAPTYPEID_CHANGED, eventHandler);
@@ -1259,29 +1388,74 @@ function Map(container, options) {
 	
 	/**
 	 * TODO not supported
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
 	 * @protected 
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addProjectionChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addProjectionChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
 	}	
 
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addRightClickListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var position = GMEvent.getPosition()	// get the position. Some eventType might return the position as a LatLng object within the data property
+	 *     map.setCenter(position)	// center the map at the returned position
+	 * }
+	 * </pre>
 	 */
 	this.addRightClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.RIGHTCLICK, eventHandler);
 	}	
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addTiltChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addTiltChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.TILT_CHANGED, eventHandler);
 	}		
 	
 	/**
-	 * @param {Function} eventHandler
+	 * @param {function(scopes.svyGoogleMaps.Event)} eventHandler
+	 * <br/>
+	 * <br/>
+	 * 
+	 * @example <pre>
+	 * map.addZoomChangedListener(callbackHandler)
+	 * 
+	 * function callbackHandler(GMEvent) {
+	 *     var map = GMEvent.getSource()	// get the Map object
+	 *     var data = GMEvent.data
+	 * }
+	 * </pre>
 	 */
 	this.addZoomChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, eventHandler);
