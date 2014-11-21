@@ -605,6 +605,10 @@ function Marker(options) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.CLICK, eventHandler);
 	}
 
+	/**
+	 * TODO prevent single click at doubleclick
+	 * @protected 
+	 * */
 	this.addDoubleClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(markerSetup.id, Marker.EVENT_TYPES.DBLCLICK, eventHandler);
 	}
@@ -932,7 +936,7 @@ function Map(container, options) {
 			if (!mapSetup.options['bounds'] || !mapSetup.options['bounds'].equals(newBounds)) {
 				dataVal = {oldValue: mapSetup.options['bounds'], newValue: newBounds}
 				mapSetup.options['bounds'] = newBounds;
-				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, data));
+				scopes.svyEventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.BOUNDS_CHANGED, new Event(Map.EVENT_TYPES.BOUNDS_CHANGED, thisInstance, null, data));
 			}
 
 			//center_changed
@@ -940,7 +944,7 @@ function Map(container, options) {
 			if (!mapSetup.options.center || !mapSetup.options.center.equals(newCenter)) {
 				dataVal = {oldValue: mapSetup.options.center, newValue: newCenter}
 				mapSetup.options.center = newCenter;
-				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
+				scopes.svyEventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.CENTER_CHANGED, new Event(Map.EVENT_TYPES.CENTER_CHANGED, thisInstance, null, dataVal));
 			}
 			
 			//projection_changed
@@ -953,7 +957,7 @@ function Map(container, options) {
 			if (data.zoom != mapSetup.options.zoom) {
 				dataVal = {oldValue: mapSetup.options.zoom, newValue: data.zoom}
 				mapSetup.options.zoom = data.zoom;
-				scopes.svyEventManager.fireEvent(mapSetup.id, eventType, new Event(eventType, thisInstance, null, dataVal));
+				scopes.svyEventManager.fireEvent(mapSetup.id, Map.EVENT_TYPES.ZOOM_CHANGED, new Event(Map.EVENT_TYPES.ZOOM_CHANGED, thisInstance, null, dataVal));
 			}
 		} else {
 			var dataVal
@@ -1231,7 +1235,9 @@ function Map(container, options) {
 	}
 	
 	/**
+	 * TODO prevent single click when double clicking
 	 * @param {Function} eventHandler
+	 * @protected 
 	 */
 	this.addDoubleClickListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.DBLCLICK, eventHandler);
@@ -1252,7 +1258,9 @@ function Map(container, options) {
 	}	
 	
 	/**
+	 * TODO not supported
 	 * @param {Function} eventHandler
+	 * @protected 
 	 */
 	this.addProjectionChangedListener = function(eventHandler) {
 		scopes.svyEventManager.addListener(mapSetup.id, Map.EVENT_TYPES.PROJECTION_CHANGED, eventHandler);
