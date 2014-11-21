@@ -63,6 +63,13 @@ function onLoad(event) {
 				mapMaker: false
 			})
 
+	//Add event listeners
+	map2.addClickListener(callbackLogger)
+	map2.addRightClickListener(callbackLogger)
+	map2.addCenterChangedListener(callbackLogger)
+	map2.addBoundChangedListener(callbackLogger)
+	map2.addZoomChangedListener(callbackLogger)
+	
 	//Adding markers
 	var m = new gmaps.Marker({
 			position: new gmaps.LatLng(0, 0),
@@ -83,7 +90,6 @@ function onLoad(event) {
 				map: map2
 			});
 		m2.addClickListener(openInfoWindow)
-		m2.addDoubleClickListener(setBoundsToMarker)
 		m2.addRightClickListener(callbackLogger)
 
 		// add a custom infoWindow to the marker
@@ -214,7 +220,7 @@ function fitBounds() {
 }
 
 /**
- * @param {scopes.svyEventManager.Event} event
+ * @param {scopes.svyGoogleMaps.Event} event
  * 
  * @properties={typeid:24,uuid:"8AB963F7-4D37-4CF9-A67B-A203D26FF343"}
  */
@@ -267,8 +273,7 @@ function searchFoAddress(event) {
 					map: map2
 				});
 			m.addClickListener(openInfoWindow)
-			m.addDoubleClickListener(setBoundsToMarker)
-			m.addRightClickListener(callbackLogger)
+			m.addRightClickListener(setBoundsToMarker)
 
 			// add a custom infoWindow to the marker
 			var info = new gmaps.InfoWindow({
