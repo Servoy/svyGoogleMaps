@@ -3,7 +3,7 @@
  * @properties={typeid:24,uuid:"63A3DA03-B3D7-4EAD-9F28-01B53EDCB19B"}
  */
 function getId() {
-	return 'com.servoy.bap.utils.googlemaps'
+	return 'com.servoy.bap.googlemaps'
 }
 
 /**
