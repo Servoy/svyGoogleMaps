@@ -41,4 +41,4 @@ Eager to fix a bug or introduce a new feature? Clone the repository and issue a 
 
 License
 -------
-svyGoogleMaps is licensed under LGPL
+svyGoogleMaps is licensed under MIT
